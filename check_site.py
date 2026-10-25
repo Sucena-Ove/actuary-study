@@ -43,6 +43,10 @@ math=json.loads((DIST/'practice'/'math-map.json').read_text(encoding='utf-8'))
 missing_math=[]
 for q in bank['questions']:
     if not (DIST/'questions'/f'{q["id"]:03d}.html').exists():errors.append(f'Question {q["id"]}: no detail page')
+    else:
+        entry=(DIST/'questions'/f'{q["id"]:03d}.html').read_text(encoding='utf-8')
+        if 'id="practice-entry"' not in entry or 'noindex,follow' not in entry:errors.append(f'Question {q["id"]}: missing guarded practice entry')
+        if any(marker in entry for marker in ['class="stem"','class="choices"','class="answer"','class="steps"']):errors.append(f'Question {q["id"]}: static answer bypass')
     for text in [q['stem'],*q['options'],*q['steps'],q['pitfall']]:
         for formula in re.findall(r'\$([^$]+)\$',text):
             if formula not in math:missing_math.append({'id':q['id'],'formula':formula})

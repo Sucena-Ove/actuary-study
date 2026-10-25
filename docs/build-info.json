@@ -1,9 +1,10 @@
 {
-  "questions": 516,
+  "questions": 540,
   "modules": 9,
-  "pages": 524,
+  "pages": 549,
+  "indexedPages": 8,
   "siteUrl": "https://sucena-ove.github.io/actuary-study/",
   "bankRevision": "2026-10-25",
-  "bankSHA256": "83e4e1ca67a01cf4e1b6871ef0984cba8db711bb86d3aefc56db7faec8816ecf",
-  "generatedAt": "2026-10-25T08:13:15.082667+00:00"
+  "bankSHA256": "ce522bd87a19e449367bace097d67941bb7935590b3e77963509e54d3ca7e6d4",
+  "generatedAt": "2026-10-25T10:54:42.568627+00:00"
 }
