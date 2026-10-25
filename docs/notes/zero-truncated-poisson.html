@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>零截断泊松：ln(1+T)、条件分布与 UMVUE · 精算随身练</title><meta name="description" content="从零截断泊松模型出发，解释充分完备统计量的一一变换、给定样本和的条件分布，以及 Rao–Blackwell 化求 UMVUE。"><meta name="theme-color" content="#205d49"><meta name="robots" content="index,follow">
+<link rel="canonical" href="https://sucena-ove.github.io/actuary-study/notes/zero-truncated-poisson.html"><meta property="og:type" content="article"><meta property="og:locale" content="zh_CN"><meta property="og:site_name" content="精算随身练"><meta property="og:title" content="零截断泊松：ln(1+T)、条件分布与 UMVUE"><meta property="og:description" content="从零截断泊松模型出发，解释充分完备统计量的一一变换、给定样本和的条件分布，以及 Rao–Blackwell 化求 UMVUE。"><meta property="og:url" content="https://sucena-ove.github.io/actuary-study/notes/zero-truncated-poisson.html">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/site.css"></head><body>
+<a class="sr-only" href="#main">跳至正文</a><header class="top"><div class="wrap top-inner"><a class="brand" href="../index.html"><span class="symbol" aria-hidden="true">Σ</span><span>精算随身练<small>PROBABILITY · THINK IT THROUGH</small></span></a><nav class="site-nav" aria-label="主导航"><a href="../topics.html">知识点</a><a href="../questions.html">题目目录</a><a href="../notes/zero-truncated-poisson.html">学习笔记</a><a class="nav-practice" href="../practice/index.html">开始练习 →</a></nav></div></header>
+<main id="main" class="wrap"><div class="page-head"><div class="breadcrumb"><a href="../index.html">首页</a> / 学习笔记</div><span class="eyebrow">Study note / 统计推断</span><h1>零截断泊松，不能少掉“截断”这一步。</h1><p>从你记得的 ln(1 + T) 与 T = N 出发，把充分性、条件分布和 UMVUE 放回同一个模型里。</p></div><article class="article-body"><nav class="article-toc" aria-label="文章目录"><a href="#model">从模型开始</a><a href="#transform">ln(1 + T) 的角色</a><a href="#conditional">给定总和</a><a href="#umvue">UMVUE</a><a href="#practice">配套练习</a></nav>
+<p class="note">本文根据考后回忆重建可能涉及的知识链。原题完整题干、参数化与选项尚未确定，因此不能只凭“ln(1 + T)”确认原题考的是哪一种结论。</p>
+<h2 id="model">1. 先确认：零值被截掉了</h2>
+<p>设 X₁，…，Xₙ 独立同分布，服从参数 λ &gt; 0 的零截断泊松分布。普通泊松变量以“严格大于零”为条件后，得到</p>
+<div class="equation">P<sub>λ</sub>(X = k) = λ<sup>k</sup> / [k! (e<sup>λ</sup> − 1)]，　k = 1, 2, …</div>
+<p>与普通泊松相比，分母变了，支持集也变了。这里每一个观测值都至少为 1，所以总和 T = ΣXᵢ 必须满足 T ≥ n。零截断泊松的均值为 λ / (1 − e<sup>−λ</sup>)，并不是 λ。</p>
+<h2 id="transform">2. ln(1 + T) 可能考查的角色：一一变换</h2>
+<p>样本联合概率为</p>
+<div class="equation">L(λ; x₁,…,xₙ) = λ<sup>T</sup> / [(e<sup>λ</sup> − 1)<sup>n</sup> ∏xᵢ!]，　xᵢ ≥ 1。</div>
+<p>样本与参数发生联系的部分只通过 T，因此由因子分解定理，T 是 λ 的充分统计量。令 η = ln λ，其自然参数空间为整个实数轴；这是支持集不依赖参数、自然参数空间含开集的一参数满指数族，因此 T 也是完备统计量。</p>
+<p>如果题目又定义 V = ln(1 + T)，由于 T = e<sup>V</sup> − 1，二者可以相互恢复。给出 V 与给出 T 包含同样的样本信息。因此：</p>
+<div class="equation">T 充分且完备　⇒　ln(1 + T) 也充分且完备。</div>
+<p>充分性保留，是因为一一变换没有丢失信息。完备性保留，是因为任何满足 E[g(V)] = 0 的函数，都能写成 h(T) = g(ln(1 + T))，再应用 T 的完备性。</p>
+<div class="pitfall"><b>不能从这里直接跳到“这是 λ 的 UMVUE”</b>充分、完备描述的是统计量所含的信息；无偏描述的是期望等于哪个待估函数。要说 V 是 λ 的无偏估计，仍然必须证明 E[V] = λ。通常这并不成立。</div>
+<p>一个快速检验：因为 T ≥ n，必有 ln(1 + T) ≥ ln(1 + n)。因此，只要 0 &lt; λ &lt; ln(1 + n)，就有 E[ln(1 + T)] ≥ ln(1 + n) &gt; λ。这已经足以证明它不能在所有 λ &gt; 0 上无偏估计 λ。若原题估计的是另一个参数函数，则必须先确认那个函数是什么。</p>
+<h2 id="conditional">3. 固定 T = N 后，样本的联合分布是什么？</h2>
+<p>这里 n 是样本量，N 是已经固定的总和，k₁，…，kₙ 是各个观测取值。条件事件有可能发生，必须有 N ≥ n；合法取值必须满足每个 kᵢ ≥ 1 且 Σkᵢ = N。</p>
+<h3>先用三个观测、总和为 5 算一遍</h3>
+<p>“每个 Xᵢ 对应一个 k”可能是两种问题：指定全部坐标，例如 X₁ = 1、X₂ = 1、X₃ = 3，是联合事件；只问 X₁ = 1，是边缘事件，要将其余坐标的全部合法分配加起来。</p>
+<p>当 n = 3、T = 5 时，三个正整数相加为 5 只有下面六种有序向量。每个向量的相对权重为 1 / (k₁! k₂! k₃!)，总权重为 3 × 1/6 + 3 × 1/4 = 5/4。</p>
+<table><thead><tr><th>(X₁, X₂, X₃)</th><th>相对权重</th><th>给定 T = 5 的概率</th></tr></thead><tbody><tr><td>(1, 1, 3)</td><td>1/6</td><td>2/15</td></tr><tr><td>(1, 3, 1)</td><td>1/6</td><td>2/15</td></tr><tr><td>(3, 1, 1)</td><td>1/6</td><td>2/15</td></tr><tr><td>(1, 2, 2)</td><td>1/4</td><td>1/5</td></tr><tr><td>(2, 1, 2)</td><td>1/4</td><td>1/5</td></tr><tr><td>(2, 2, 1)</td><td>1/4</td><td>1/5</td></tr></tbody></table>
+<p>只问 X₁ = k 时，把第一坐标相同的行加起来：</p>
+<div class="equation">P(X₁ = 1 | T = 5) = 2/15 + 2/15 + 1/5 = 7/15；<br>P(X₁ = 2 | T = 5) = 1/5 + 1/5 = 2/5；<br>P(X₁ = 3 | T = 5) = 2/15。</div>
+<p>其余 k 的概率为 0；这三项相加为 1，条件均值为 5/3。注意“指定向量 (1,1,3)”的概率是 2/15，而“不管顺序、其中两个为 1，一个为 3”的概率是 3 × 2/15 = 2/5。固定总和后，三个变量也不再独立。</p>
+<h3>再把例子写成一般公式</h3>
+<p>把联合概率除以 P(T = N)，其中的 λ<sup>N</sup> 与 (e<sup>λ</sup> − 1)<sup>−n</sup> 消去，得到一个与 λ 无关的条件分布。记 S(N,n) 为第二类 Stirling 数，即把 N 个有区别的对象分成 n 个非空无标号组的方法数，则</p>
+<div class="equation">P(X₁ = k₁,…,Xₙ = kₙ | T = N)<br>= N! / [n! S(N,n) ∏kᵢ!]，　kᵢ ≥ 1，Σkᵢ = N。</div>
+<p>不满足上述支持集的取值，条件概率为 0。归一化来自恒等式：</p>
+<div class="equation">Σ<sub>kᵢ≥1, Σkᵢ=N</sub> N! / ∏kᵢ! = n! S(N,n)。</div>
+<p>组合解释很直接：把 N 个有区别的对象投进 n 个有标号的盒子，而且每盒必须非空。固定各盒数量 k₁，…，kₙ 时，有 N! / ∏kᵢ! 种投放方式；所有满射共有 n! S(N,n) 种。</p>
+<table><thead><tr><th>样本模型</th><th>给定总和后的分布</th></tr></thead><tbody><tr><td>普通独立同参数泊松</td><td>Multinomial(N; 1/n,…,1/n)，允许某格为 0</td></tr><tr><td>零截断独立同参数泊松</td><td>上面的多项分布，再条件于所有格子都大于 0</td></tr></tbody></table>
+<p>因此，零截断情形不是未经条件化的普通多项分布，也不是在所有正整数分拆上等概率分配。不同向量的概率与 1 / ∏kᵢ! 成正比。</p>
+<h3>只问其中一个 Xᵢ 呢？</h3>
+<p>利用对称性，每个 Xᵢ 的条件边缘分布都相同。当 n ≥ 2 时：</p>
+<div class="equation">P(X₁ = k | T = N)<br>= C(N,k) S(N−k,n−1) / [n S(N,n)]，<br>k = 1,…,N−n+1。</div>
+<p>如果题目只要条件均值，则不必计算这些 Stirling 数。因为条件分布仍然对各个样本位置对称，且 ΣXᵢ = N，所以 E(Xᵢ | T = N) = N/n。</p>
+<h3>n = 2 时，式子会简单很多</h3>
+<p>由于 2! S(N,2) = 2<sup>N</sup> − 2，</p>
+<div class="equation">P(X₁ = k | T = N) = C(N,k) / (2<sup>N</sup> − 2)，<br>k = 1,…,N−1。</div>
+<p>例如固定 T = 4，那么 (X₁,X₂) 只可能为 (1,3)、(2,2)、(3,1)，相应概率分别是 2/7、3/7、2/7。两端的 (0,4)、(4,0) 已被截掉；三个剩余向量也不是各占 1/3。</p>
+<h2 id="umvue">4. 为什么条件分布正好能用来求 UMVUE？</h2>
+<p>设要估计 q<sub>λ</sub>(k) = P<sub>λ</sub>(X = k)，其中 k ≥ 1 是固定整数。最容易找到的无偏估计是指示变量 I{X₁ = k}，因为其期望正好等于 q<sub>λ</sub>(k)。再对完备充分统计量 T 取条件期望：</p>
+<div class="equation">δ<sub>k</sub>(T) = E[I{X₁ = k} | T]<br>= C(T,k) S(T−k,n−1) / [n S(T,n)]。</div>
+<p>在 1 ≤ k ≤ T−n+1 时使用该式，否则取 0。这就是 n ≥ 2 时 q<sub>λ</sub>(k) 的 UMVUE。n = 1 时，T = X₁，本身的指示变量已经是完备充分统计量的函数。</p>
+<p>如果原题写成普通泊松概率 p<sub>λ</sub>(k) 除以 1 − e<sup>−λ</sup>，那么它正好等于 q<sub>λ</sub>(k)。但仍需确认样本自身是“普通泊松”还是“零截断泊松”；二者的条件分布和无偏估计构造不能混用。</p>
+<h3>待估函数若是 λ，又该怎么办？</h3>
+<p>对于一个零截断泊松观测，U = X₁ I{X₁ ≥ 2} 是 λ 的无偏估计。直接求和可得：</p>
+<div class="equation">E[U] = [Σ<sub>j≥2</sub> j λ<sup>j</sup>/j!] / (e<sup>λ</sup>−1)<br>= λ(e<sup>λ</sup>−1)/(e<sup>λ</sup>−1) = λ。</div>
+<p>对 T 条件化，可把 U 写成 X₁ − I{X₁ = 1}。由 E(X₁|T) = T/n 得到 λ 的 UMVUE：</p>
+<div class="equation">δ(T) = T/n − T S(T−1,n−1)/[n S(T,n)]<br>= T S(T−1,n) / S(T,n)。</div>
+<p>最后一步用了第二类 Stirling 数递推 S(T,n) = nS(T−1,n) + S(T−1,n−1)。当 n = 2 时，</p>
+<div class="equation">δ(T) = T/2 − T/(2<sup>T</sup>−2)。</div>
+<p>例如 T = 4 时，这个估计值为 12/7。它既不是 T/n，也不是 ln(1 + T)。三者扮演的角色不同，需要分别验证。</p>
+<h2>5. 再多想一步：最大似然与无偏并非一回事</h2>
+<p>对数似然求导得到得分方程：</p>
+<div class="equation">T/n = λ / (1 − e<sup>−λ</sup>)。</div>
+<p>若 T &gt; n，左侧大于 1，该方程有唯一正根，通常需要数值求解；一般不能把它直接改写为 ln(1 + T)。若 T = n，则所有 Xᵢ 都是 1，似然的上确界在 λ ↓ 0 时取得极限；在参数空间 λ &gt; 0 内没有取得最大值的点。</p>
+<p>比如 n = 3、T = 5 时，λ 的 MLE 约为 1.1263；λ 的 UMVUE 为 5S(4,3)/S(5,3) = 6/5，而 ln(1 + T) = ln 6。这三个数不一样，并不矛盾。</p>
+<h3>Fisher 信息：区分变换统计量与变换参数</h3>
+<p>将零截断的归一化项也一同求导，单个观测与 n 个独立观测的 Fisher 信息分别为：</p>
+<div class="equation">I₁(λ) = [1 − (1 + λ)e<sup>−λ</sup>] / [λ(1 − e<sup>−λ</sup>)²]，<br>Iₙ(λ) = n I₁(λ)。</div>
+<p>保留 V = ln(1 + T) 时，T 可以完整恢复，关于同一个参数 λ 的 Fisher 信息不变。但若把参数本身换成 η = ln λ，信息要按参数变换规律改写：</p>
+<div class="equation">Iₙ<sup>(η)</sup> = (dλ/dη)² Iₙ<sup>(λ)</sup> = λ² Iₙ<sup>(λ)</sup>。</div>
+<div class="pitfall"><b>考场检查顺序</b>先写支持集 → 再分清普通泊松与零截断泊松 → 看问题究竟要充分性、条件分布、无偏估计还是最大似然 → 最后代入数值。看到 ln(1 + T) 时，先找它在题干中“被定义为什么”。</div>
+<h2 id="practice">配套进阶练习</h2>
+<p>建议按统计量变换、条件分布、无偏估计、信息量的顺序完成，再回头对照自己记得的原题形式。</p>
+<ul><li><a href="../questions/501.html">#501 · 可逆变换与完全充分性</a></li><li><a href="../questions/502.html">#502 · 对数统计量的离散分布</a></li><li><a href="../questions/503.html">#503 · 固定总和的有序联合事件</a></li><li><a href="../questions/504.html">#504 · 固定总和的单个条件分布</a></li><li><a href="../questions/505.html">#505 · 一般单个条件概率公式</a></li><li><a href="../questions/506.html">#506 · 普通泊松与零截断泊松的条件对照</a></li><li><a href="../questions/507.html">#507 · 固定总和后的负相关</a></li><li><a href="../questions/508.html">#508 · 一般联合条件分布的归一化</a></li><li><a href="../questions/509.html">#509 · 总和的分布不再是零截断泊松</a></li><li><a href="../questions/510.html">#510 · 概率函数的UMVUE：三观测</a></li><li><a href="../questions/511.html">#511 · λ的UMVUE：一般样本量</a></li><li><a href="../questions/512.html">#512 · 奇偶性构造无偏估计与UMVUE</a></li><li><a href="../questions/513.html">#513 · 极大似然方程与唯一解</a></li><li><a href="../questions/514.html">#514 · 极大似然的边界：总和等于样本量</a></li><li><a href="../questions/515.html">#515 · 零截断泊松的Fisher信息</a></li><li><a href="../questions/516.html">#516 · 信息保留与Cramér–Rao下界</a></li></ul>
+<h2>来源与推导说明</h2>
+<p>本文公式依据所列模型独立推导。充分性使用因子分解定理；完备性使用自然参数空间含开集的满指数族定理；UMVUE 使用 Rao–Blackwell 与 Lehmann–Scheffé 定理。第二类 Stirling 数在这里仅用于写出非空占位计数。未将未知的教材习题编号或考题原文作为出处。</p>
+<ul><li><a href="https://dlmf.nist.gov/26.8#E12" rel="noopener noreferrer">NIST DLMF §26.8：第二类 Stirling 数</a>，用于核对递推、指数生成函数和组合恒等式。</li><li><a href="https://www.stat.berkeley.edu/~wfithian/courses/stat210a/sufficiency.html" rel="noopener noreferrer">UC Berkeley：Sufficiency</a>，关于充分统计量与因子分解定理。</li><li><a href="https://stat210a.berkeley.edu/fall-2025/reader/completeness.html" rel="noopener noreferrer">UC Berkeley：Completeness, Ancillarity, and Basu’s Theorem</a>，关于满秩指数族的完备充分性。</li></ul>
+<p class="note">Ross《Introduction to Probability Models》可作为泊松模型、条件分布与计数方法的延伸阅读；本文统计推断部分不据此宣称属于 SOA Exam P 考纲。每道配套题的具体参考资料以题目页为准。</p>
+</article></main><footer class="footer"><div class="wrap"><p>精算随身练 · 题库修订版<br>先思考，再看答案。每题都有一个值得弄懂的地方。</p><div><a href="../about.html">关于与来源</a><a href="../questions.html">全部题目</a><a href="../about.html#contact">联系作者</a><a href="https://space.bilibili.com/247892366" rel="noopener noreferrer">B站 · UID 247892366 ↗</a></div></div></footer></body></html>

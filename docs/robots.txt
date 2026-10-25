@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://sucena-ove.github.io/actuary-study/sitemap.xml
