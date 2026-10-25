@@ -1,0 +1,42 @@
+精算随身练 · 小游戏接入说明
+
+入口
+网站休息站：games/index.html
+直接游玩：games/wild-lasso/index.html
+强制触控模式：games/wild-lasso/index.html?mobile=1
+
+版本来源
+从用户提供的“荒野套牛-v8山路与马蹄-Windows64位”中，只读提取 resources/app.asar 的 dist 网页资源。
+未启动 Windows 可执行程序，未修改原始游戏文件。
+
+保留内容
+训练模式、牛仔大赛、25 种牛、5 匹坐骑、故事章节、服装解锁、原有音效及五首配乐。
+原有电脑键鼠操作与手机双手触控、横屏提示、暂停机制保留。
+音乐出处说明位于 games/wild-lasso/assets/music-credits.txt。
+
+网页接入调整
+新增休息站入口页和操作说明。
+在序章、准备页、暂停页及桌面工具栏加入“返回题库”。
+所有本地资源和导航使用相对路径，适配 GitHub Pages 的 /actuary-study/ 子路径。
+将原网页中唯一内联启动脚本移入 web-entry.js；游戏原有 style 属性与绘制逻辑保留。
+现有公开题库和学习记录不由游戏修改，游戏分数与剧情奖金不兑换积分或现金。
+
+构建维护
+source-data/games/ 是可维护的网页源文件，docs/games/ 是发布副本。
+构建脚本需要把 source-data/games/ 原样复制到 docs/games/；仅编辑 docs 会在重建时被覆盖。
+整个小游戏约 37.5 MB，最大的单个资源约 8.4 MB。
+首次开始游戏会加载当前曲目；GitHub Pages 网络质量会影响媒体加载速度。
+
+存储与限制
+游戏存档保存在当前浏览器的 localStorage，使用 wild-lasso 前缀键名。
+不上传账号、刷题记录或游戏进度，不提供跨设备游戏存档同步。
+原 Windows / Android 安装版的浏览器存储与网页不同，存档不会自动迁移。
+清理浏览器站点数据可能删除存档；网页没有新增存档导入导出功能。
+公开静态小游戏资源可以被下载，不应将题库激活码或其他秘密加入此目录。
+
+静态验证
+两个 HTML 页的本地引用均存在，导航不逃逸发布目录。
+8 个 JavaScript 文件通过 Node 语法检查。
+source-data 与 docs 游戏资源一致。
+未发现运行时联网接口、Node/Electron IPC、凭据或个人文件路径。
+实际浏览器玩法与移动端视觉验证由主任务统一执行。

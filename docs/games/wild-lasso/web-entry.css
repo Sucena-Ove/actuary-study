@@ -1,0 +1,3 @@
+.study-return{display:inline-block;color:inherit;text-decoration:none;font-size:12px;line-height:1.5;font-weight:650;padding:8px 10px;border:1px solid currentColor;border-radius:6px;white-space:nowrap}.study-return:hover{opacity:.75}.study-return:focus-visible{outline:3px solid #bf813e;outline-offset:3px}.study-return-menu{display:inline-block;color:#4f6650;font-size:12px;font-weight:650;padding:10px 4px;margin-top:10px}.prologue-header .study-return{color:#f4e6ca;margin-right:12px}.pause-card .study-return-menu{display:block;margin:12px auto 0}.touch-mode .welcome-preparation .study-return-menu{padding:12px 4px}.touch-mode .prologue-header .study-return{font-size:11px;padding:7px;margin-right:6px}
+
+@media(max-width:560px){.site-header .study-return{display:none}}

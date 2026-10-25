@@ -2,6 +2,8 @@
 
 免费静态学习站，面向概率论与数理统计。包含首页、知识点目录、可搜索题目目录、每题独立 HTML 页面、学习笔记和保留本机进度的刷题区。
 
+本次题库修订保留原有 516 道公开题，另提供 24 道原创加密进阶题、每日 1–120 骰子练习目标与“荒野套牛”小游戏。目标按北京时间在本机记录，不限制公开题库使用。游戏存档与学习记录独立。
+
 这是静态网站，**不提供用户注册、登录或账号同步服务**。刷题进度保存在访问者当前浏览器；可在“我的”中导出、导入。不要向此仓库加入用户进度、后端数据库、密钥、签名文件或原始 PDF。
 
 ## 构建
@@ -20,6 +22,31 @@ python build_site.py --bank /absolute/path/bank.json --assets /absolute/path/web
 ```
 
 输入将复制到 `source-data/`，网站输出到 `docs/`，之后可以独立重建。`source-data/app.js` 是输入版本；生成器仅在 `docs/practice/app.js` 做静态站适配。
+
+## 加密进阶题库
+
+公开仓库只保存 `source-data/vault.json` 的密文和公开解密程序，构建时复制到刷题目录。首批 50 个随机密钥和题库制作明文保存在仓库外，不进入 Git。`tools/build_vault.py` 需要本地安装 `cryptography`，普通网站构建不需要它。
+
+发布者可指定仓库外的题库 JSON 和私有 CSV，生成或更新密文：
+
+```text
+python tools/build_vault.py --bank /private/advanced-bank.json --codes /private/codes.csv --output source-data/vault.json --count 50
+```
+
+CSV 已存在时会复用其中的密钥，不覆盖发放记录。密钥有 160 位随机熵；每个密钥通过 HKDF-SHA-256 派生包装密钥，AES-256-GCM 保护内容密钥与题库。公开的 SHA-256 索引用于定位密钥槽，不是解密密码。
+
+浏览器只请求密文文件，在本地解密；密钥不进入网址、学习备份或持久存储。刷新、离开或手动锁定后需要重新输入；错题题号与学习进度保留。浏览器须支持 WebCrypto，并使用 HTTPS 或 localhost 预览。
+
+静态模式允许同一密钥重复使用或分享，不能保证一次性兑换、绑定用户、远程撤销或阻止持有效密钥者另存题目。历史公开的 516 题仍然公开；本功能不声称防止全部抓取。不要在此仓库发布私有 CSV、明文题库或生产密钥测试数据。
+
+## 验证
+
+```text
+python -m pytest tests/test_vault_crypto.py
+node tests/test_static_practice.cjs
+```
+
+第一项检查密钥隔离、全部测试密钥解密与密文篡改；第二项检查每日目标、旧进度兼容和锁定题库后的记录恢复。
 
 ## 本地预览
 

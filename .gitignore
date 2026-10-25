@@ -3,3 +3,9 @@ __pycache__/
 .preview*
 qa-report.json
 qa/
+*.csv
+*密钥*
+*兑换码*
+private-vault/
+operator-private/
+.env

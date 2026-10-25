@@ -54,7 +54,7 @@ def page(path,title,description,body,prefix='',kind='website',script=''):
 <title>{esc(title)} · 精算随身练</title><meta name="description" content="{esc(description)}"><meta name="theme-color" content="#205d49"><meta name="robots" content="index,follow">
 <link rel="canonical" href="{esc(canonical)}"><meta property="og:type" content="{kind}"><meta property="og:locale" content="zh_CN"><meta property="og:site_name" content="精算随身练"><meta property="og:title" content="{esc(title)}"><meta property="og:description" content="{esc(description)}"><meta property="og:url" content="{esc(canonical)}">
 <link rel="icon" href="{prefix}assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="{prefix}assets/site.css"></head><body>
-<a class="sr-only" href="#main">跳至正文</a><header class="top"><div class="wrap top-inner"><a class="brand" href="{prefix}index.html"><span class="symbol" aria-hidden="true">Σ</span><span>精算随身练<small>PROBABILITY · THINK IT THROUGH</small></span></a><nav class="site-nav" aria-label="主导航"><a href="{prefix}topics.html">知识点</a><a href="{prefix}questions.html">题目目录</a><a href="{prefix}notes/zero-truncated-poisson.html">学习笔记</a><a class="nav-practice" href="{prefix}practice/index.html">开始练习 →</a></nav></div></header>
+<a class="sr-only" href="#main">跳至正文</a><header class="top"><div class="wrap top-inner"><a class="brand" href="{prefix}index.html"><span class="symbol" aria-hidden="true">Σ</span><span>精算随身练<small>PROBABILITY · THINK IT THROUGH</small></span></a><nav class="site-nav" aria-label="主导航"><a href="{prefix}topics.html">知识点</a><a href="{prefix}questions.html">题目目录</a><a href="{prefix}notes/zero-truncated-poisson.html">学习笔记</a><a href="{prefix}games/index.html">小游戏</a><a class="nav-practice" href="{prefix}practice/index.html">开始练习 →</a></nav></div></header>
 <main id="main" class="wrap">{body}</main><footer class="footer"><div class="wrap"><p>精算随身练 · 题库修订版<br>先思考，再看答案。每题都有一个值得弄懂的地方。</p><div><a href="{prefix}about.html">关于与来源</a><a href="{prefix}questions.html">全部题目</a><a href="{prefix}about.html#contact">联系作者</a><a href="https://space.bilibili.com/247892366" rel="noopener noreferrer">B站 · UID 247892366 ↗</a></div></div></footer>{script}</body></html>'''
     write(path,content)
 
@@ -78,7 +78,8 @@ home=f'''<section class="hero"><div><span class="eyebrow">一本随时翻开的�
 <section class="section"><div class="section-head"><h2>从一个薄弱点开始。</h2><a href="topics.html">完整知识点目录 →</a></div><div class="module-grid">{module_cards()}</div></section>
 <section class="section"><div class="section-head"><h2>把公式背后的问题讲清楚。</h2><span class="note">{advanced_text}</span></div><article class="article-feature"><div class="label">Study note<br>01 / 统计推断</div><div><h3><a href="notes/zero-truncated-poisson.html">零截断泊松：总和、条件分布与 UMVUE</a></h3><p>给定 T = N，怎样估计 pλ(k)/(1 − e⁻λ)？先写一般条件分布，再沿无偏性、完备充分性推到 UMVUE；同时给出 n = 2 的简化式。</p></div><a class="arrow" href="notes/zero-truncated-poisson.html" aria-label="阅读零截断泊松学习笔记">↗</a></article></section>
 <section class="section"><div class="section-head"><h2>怎样使用这本题库？</h2></div><div class="module-grid"><div class="module-card"><h3>01 / 先定位考点</h3><p>搜索题干、题号或知识点。每题都有独立页面，可以收藏、分享和打印。</p></div><div class="module-card"><h3>02 / 给思考留一点时间</h3><p>进入刷题区，选好答案后再确认。做错的题留在本机错题本，下一次接着练。</p></div><div class="module-card"><h3>03 / 回到模型与条件</h3><p>对照步骤检查假设、支持集和参数化。最后看易错提醒与来源说明，避免只记结论。</p></div></div></section>'''
-home+='<section class="section contact-card"><div><span class="eyebrow">Contact / 联系作者</span><h2>一起把题目弄明白。</h2><p>有题目反馈、解题疑问或学习交流，欢迎到 B 站主页私信。反馈时带上题号和你的思路，方便一起核对。</p><span class="note">B站 UID 247892366</span></div><a class="button" href="https://space.bilibili.com/247892366" rel="noopener noreferrer">前往 B 站主页 ↗</a></section>'
+home+='<section class="section"><div class="section-head"><h2>给今天的练习一点变化。</h2></div><div class="module-grid"><a class="module-card" href="practice/index.html"><span>每日开局 ↗</span><h3>掷一次 120 面骰子</h3><p>随机定下今天的练习目标，完成后还可以继续。原有题库自由练习。</p></a><a class="module-card" href="practice/index.html"><span>专题进阶 ↗</span><h3>输入作者提供的密钥</h3><p>在当前页面解锁进阶题目与解析。刷新后需重新输入，请妥善保存密钥。</p></a><a class="module-card" href="games/index.html"><span>休息一下 ↗</span><h3>荒野套牛</h3><p>骑上马，试试训练、比赛与故事模式。练完再回来，继续今天的目标。</p></a></div></section>'
+home+='<section class="section contact-card"><div><span class="eyebrow">Contact / 联系作者</span><h2>一起把题目弄明白。</h2><p>有题目反馈、解题疑问、密钥咨询或学习交流，欢迎到 B 站主页私信。反馈时带上题号和你的思路，方便一起核对。</p><span class="note">B站 UID 247892366</span></div><a class="button" href="https://space.bilibili.com/247892366" rel="noopener noreferrer">前往 B 站主页 ↗</a></section>'
 page('index.html','概率论与数理统计学习题库',f'{len(questions)}道概率论与数理统计练习，含知识点分类、分步解析、来源说明与零截断泊松进阶笔记。免费在线刷题，无需注册。',home)
 
 topic_body=f'<div class="page-head">{breadcrumb("知识点目录")}<span class="eyebrow">Knowledge map</span><h1>先找到你想弄懂的那一块。</h1><p>知识点标签连接相关题目；同一道题可以跨越多个考点。带“拓展提高”的题目用于深化理解，不表示属于当前考试必考范围。</p></div>'
@@ -117,13 +118,18 @@ page('notes/zero-truncated-poisson.html','零截断泊松：给定T=N的条件�
 source_rows=''.join('<li><strong>'+esc(s['title'])+'</strong>：'+esc(s.get('description',s.get('kind','')))+(f' <a href="{esc(s["url"])}" rel="noopener noreferrer">参考链接</a>' if s.get('url') and urlparse(s['url']).scheme in ('https','http') else '')+'</li>' for s in bank['sources'])
 about=f'<div class="page-head">{breadcrumb("关于与来源")}<h1>关于这本学习题库</h1><p>把考试复盘、教材知识点和日常练习整理成一处可以查阅的地方。</p></div><article class="article-body"><h2>题库说明</h2><p>当前收录 {len(questions)} 题，包含题干、四个选项、答案、分步解析、易错提醒与知识点标签。考试回忆题的缺失条件与数值由编者补全，不能视为官方原题。原创同型题不代表教材原书或 SOA 原题。</p><p>{esc(bank["conventions"])}</p><h2>公开学习与本机进度</h2><p>题目目录、题目正文和学习笔记是公开静态网页。网页不需要注册，也不提供账号后台。刷题进度、错题和收藏保存在当前浏览器本机；网站不会自动上传学习记录。浏览器清理数据、更换设备或使用无痕窗口时，记录可能丢失，请在刷题区“我的”中导出备份。</p><p>手机 App 与此网站不会自动互通账号。兼容的本地学习进度可以通过导出、导入手动转移；账号同步需要另行部署服务。</p><h2>资料与出处</h2><ul>{source_rows}</ul><h2>阅读与纠错</h2><p>来源说明用于辨别题目出处和改写范围。请以题干明确写出的条件为准，注意参数化、独立性与支持集。发现疑问时，可记录题号与推导进行复核。</p><p class="note">本网站与中国精算师协会、SOA、相关院校或出版社无隶属关系。主科目与拓展标签用于学习安排，不构成官方考试范围承诺。</p></article>'
 contact='<section id="contact"><h2>联系作者与题目反馈</h2><p>这是一个边学习、边整理的概率统计学习站。如果发现题目条件有歧义、答案有疑问，或想交流一种更直观的解法，欢迎带上题号和推导到 B 站主页私信。</p><p><strong>B站 UID：247892366</strong></p><p><a class="button primary" href="https://space.bilibili.com/247892366" rel="noopener noreferrer">前往作者 B 站主页 ↗</a></p></section>'
-about=about.replace('</article>',contact+'</article>')
+about=about.replace('</article>','<h2>每日目标与进阶密钥</h2><p>每日骰子按北京时间在当前浏览器记录，点数为 1–120，是自愿练习目标，不限制原有公开题库。它不绑定身份，清理浏览器数据后会重置。</p><p>进阶题库以加密文件发布。密钥在浏览器本地使用，不放入网址，不上传到验证接口，也不保存在学习进度中。解锁内容只在当前页面保留，刷新或重新锁定后需再次输入密钥；已保存的错题题号可在再次解锁后继续复习。</p><p>此方式支持密钥重复使用，不提供一次性兑换、账号绑定或可靠的远程撤销。获得密钥的人能够读取并另存题目，请仅向预期使用者提供密钥。原有公开题库保持原样。</p>'+contact+'</article>')
 page('about.html','关于、联系方式与资料来源','精算随身练题库来源说明、B站联系方式、本机学习记录与静态网站使用方式。',about)
 
 shutil.copytree(HERE/'assets',out/'assets',dirs_exist_ok=True)
 practice=out/'practice';practice.mkdir(exist_ok=True)
 shutil.copytree(source_dir/'math',practice/'math',dirs_exist_ok=True)
 for name in ['bank.json','math-map.json','style.css']:shutil.copy2(source_dir/name,practice/name)
+for name in ['vault.js','vault.json']:
+    if (source_dir/name).is_file():shutil.copy2(source_dir/name,practice/name)
+if (source_dir/'games').is_dir():
+    shutil.copytree(source_dir/'games',out/'games',dirs_exist_ok=True)
+    pages.extend(site_url+p for p in ['games/index.html','games/wild-lasso/index.html'])
 js=(source_dir/'app.js').read_text(encoding='utf-8')
 # Static hosting has no account API. Keep the proven local-practice flow only.
 replacements={
@@ -141,6 +147,7 @@ js=js.replace(hook,replacement)
 write('practice/app.js',js)
 write('practice/index.html',f'''<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#205d49"><meta name="description" content="精算随身练在线刷题：{len(questions)}道概率统计题，确认答案后显示分步解析，错题和进度保存在本机。"><meta name="robots" content="index,follow"><link rel="canonical" href="{esc(site_url)}practice/index.html"><title>在线刷题 · 精算随身练</title><link rel="icon" href="../assets/favicon.svg"><link rel="stylesheet" href="style.css"></head><body><header><a href="../index.html" class="brand" style="text-decoration:none;color:inherit"><span class="logo">Σ</span><div>精算随身练<small>← 返回学习站</small></div></a><span class="offline">本机保存 · 无需账号</span></header><main id="app"><div class="loading"><span class="logo">Σ</span><h2>准备好，练一题。</h2><p>正在读取题库…</p><noscript>刷题区需要 JavaScript；也可前往<a href="../questions.html">静态题目目录</a>阅读题解。</noscript></div></main><nav id="nav"><button data-action="home">练习</button><button data-action="topics">专题</button><button data-action="wrong">错题</button><button data-action="mine">我的</button></nav><div id="toast" role="status"></div><script src="app.js"></script></body></html>''')
 practice_html=(practice/'index.html').read_text(encoding='utf-8')
+practice_html=practice_html.replace('<script src="app.js"></script>','<script src="vault.js"></script><script src="app.js"></script>')
 practice_footer='<footer style="max-width:760px;margin:auto;padding:0 20px 100px;font-size:12px;color:#68766c"><a href="../about.html#contact">联系作者 / 题目反馈</a> · <a href="https://space.bilibili.com/247892366" rel="noopener noreferrer">B站 UID 247892366 ↗</a></footer>'
 write('practice/index.html',practice_html.replace('</main><nav','</main>'+practice_footer+'<nav'))
 pages.append(site_url+'practice/index.html')

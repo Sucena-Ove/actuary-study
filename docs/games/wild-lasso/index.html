@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f6f1e7">
+  <meta name="description" content="西弗吉尼亚州的华裔牧场青年林野，为大学学费走上牛仔赛场。体验山路与马蹄的家庭故事，骑马赶牛、控绳、赢得奖金，完成第一学年目标。">
+  <title>荒野套牛 · 精算随身练休息站</title>
+  <link rel="canonical" href="https://sucena-ove.github.io/actuary-study/games/wild-lasso/index.html">
+  <link rel="stylesheet" href="style.css"><link rel="stylesheet" href="mobile.css"><link rel="stylesheet" href="web-entry.css">
+</head>
+<body>
+  <script src="web-entry.js"></script>
+  <main class="app">
+    <header class="site-header">
+      <a class="brand" href="./index.html" aria-label="荒野套牛首页"><span class="brand-mark"><svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M11 24C2 15 10 7 18 17M37 24C46 15 38 7 30 17" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M14 17L24 13L34 17L31 35L24 40L17 35Z" fill="currentColor"/><path d="M19 25H20M28 25H29" stroke="#f6f1e7" stroke-width="3" stroke-linecap="round"/></svg></span><span>荒野套牛<small>WILD LASSO</small></span></a>
+      <div class="mode-switch" role="group" aria-label="游戏模式"><button class="selected" id="practiceBtn" aria-pressed="true">训练模式 <small>自由选牛</small></button><button id="challengeBtn" aria-pressed="false">牛仔大赛 <small>3 分钟竞技</small></button></div>
+      <div class="header-tools"><a class="study-return" href="../../practice/index.html">← 返回题库</a><button class="letter-button" id="storyBtn" type="button"><span aria-hidden="true">✦</span> 山路与马蹄</button><button class="icon-button" id="fullscreenBtn" aria-label="切换全屏" title="全屏 F11"><svg viewBox="0 0 24 24" fill="none"><path d="M8 3H3v5M16 3h5v5M21 16v5h-5M8 21H3v-5"/></svg></button><button class="icon-button" id="helpBtn" aria-label="玩法说明" title="玩法说明"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.5"/><path d="M9.5 8.7a2.6 2.6 0 0 1 5 1c0 1.7-2.5 1.8-2.5 3.6M12 16.5v.1"/></svg></button></div>
+    </header>
+
+    <section class="game-shell" aria-label="套牛游戏">
+      <div class="game-topbar"><div class="ranch-label"><span class="live-dot"></span> 雪松溪牧场 <span class="divider">/</span><span id="modeLabel">训练模式</span></div><div class="game-actions"><div class="music-now"><span id="musicTrackLabel">牧场电台</span><button id="nextMusicBtn" type="button" aria-label="下一首音乐，快捷键 N" title="下一首 N">▷|</button></div><button id="soundBtn" class="small-button" aria-pressed="true" title="关闭音效"><svg viewBox="0 0 24 24" fill="none"><path d="M11 5L6 9H3v6h3l5 4V5ZM15 8c3 2 3 6 0 8M18 5c5 4 5 10 0 14"/></svg><span>音效开</span></button><button id="musicBtn" class="small-button" aria-pressed="true" title="关闭音乐"><svg viewBox="0 0 24 24" fill="none"><path d="M9 17V5l11-2v12M9 8l11-2"/><ellipse cx="6" cy="18" rx="3" ry="2"/><ellipse cx="17" cy="16" rx="3" ry="2"/></svg><span>音乐开</span></button><button id="pauseBtn" class="small-button" disabled><svg viewBox="0 0 24 24" fill="none"><path d="M8 5v14M16 5v14" stroke-width="3"/></svg><span>暂停</span></button></div></div>
+      <div class="arena" id="arena">
+        <canvas id="game" width="1400" height="820" tabindex="0" aria-label="赶牛竞技场。WASD骑马走位，把牛赶进中央牛栏，Shift加速。鼠标瞄准，左键蓄力松开投绳；套中后按住左键让绿色控制区上升，松开下降，让牛标留在绿区积攒力量，准备好后按空格猛拽。右键或Q完全解绳。骑手留在栏外门闩旁按E关门。Escape暂停，F11全屏，N换音乐。R在训练中重试，比赛中扣8秒重试。">你的浏览器需要支持 Canvas 才能游玩。</canvas>
+        <div class="hud"><div class="score-card"><span class="hud-caption">本场积分</span><strong id="score">0000</strong><span class="caught-count">已入栏 <b id="caught">0</b> 头牛</span></div><div class="timer-card"><span class="hud-caption" id="timerLabel">自由训练</span><strong id="timer">∞</strong><div class="timer-track"><i id="timerFill"></i></div></div></div>
+        <div id="missionPanel" class="mission-panel" aria-label="本轮任务">
+          <div class="mission-heading"><span id="roundLabel">自由训练</span><strong id="cowName">豆丁</strong><span id="personalityLabel">温顺小牛</span></div>
+          <p id="objectiveText">从侧后方赶牛入栏，留在栏外门闩旁按 E 关门</p><span id="tacticText">套索可选；站位决定牛的逃跑方向。</span>
+          <div class="cow-condition"><div class="cow-condition-label"><strong id="cowTrait">回头找路</strong><span>牛的体力 <b id="resistanceText">100%</b></span></div><div class="resistance-track"><i id="resistanceFill" style="width:100%"></i></div></div>
+        </div>
+        <aside id="racePanel" class="race-panel hidden" aria-label="比赛状态与电脑对手排名">
+          <div class="race-heading"><span id="heatLabel">开场赛</span><strong id="rankingValue">第 4 名</strong></div>
+          <p id="sprintCatchText" class="sprint-catch-text">新牛入场前 12 秒，试试快速套中！</p>
+          <div class="race-stats"><div><span>连胜</span><strong id="streakValue">0</strong></div><div><span>得分倍率</span><strong id="comboMultiplier">×1.00</strong></div></div>
+          <div class="crowd-label"><span>观众热度</span><span>✦</span></div><div class="crowd-track"><i id="crowdFill" style="width:0%"></i></div>
+          <div class="rivals-heading">电脑对手排行榜 <small>本地比赛</small></div><div id="rivalsList" class="rivals-list"></div>
+        </aside>
+        <div id="combo" class="combo hidden"></div>
+        <div class="arena-tag"><span>✦</span> 牛进栏，人留外，关好门</div>
+        <div class="rider-hud" id="riderHud" aria-label="骑手与马匹状态"><div class="rider-health"><span>骑手生命 <small>HP</small></span><b id="healthValue" aria-label="骑手生命值">100 / 100</b></div><div class="health-track"><i id="healthFill" style="width:100%"></i></div><div class="horse-stamina"><span>马匹耐力</span><b id="staminaValue">100%</b></div><div class="stamina-track"><i id="staminaFill" style="width:100%"></i></div><small><kbd>SHIFT</kbd> 加速闪避 · 松开恢复</small></div>
+        <div id="strugglePanel" class="struggle-panel hidden" aria-label="控绳状态">
+          <div class="struggle-heading"><strong id="targetName">牧场牛</strong><span id="targetWeight">420 kg</span><span class="struggle-badge" id="struggleBadge">正在挣扎</span></div>
+          <div id="duelPanel" class="duel-panel" aria-label="套索控制条">
+            <div id="duelTrack" class="duel-track" aria-label="按住升起绿色控制区，松开下降"><span id="duelGrip" class="duel-grip" style="bottom:50%;height:30%"></span><span id="duelMarker" class="duel-marker" style="bottom:50%" aria-label="牛的位置">◆</span></div>
+            <div class="duel-controls"><p id="duelHint">按住左键升绿区，松开下降。让牛标留在绿区。</p><div class="duel-charge-label"><span>猛拽力量</span><b id="duelChargeValue">0%</b></div><div class="duel-charge-track"><i id="duelChargeFill" style="width:0%"></i></div><button id="yankBtn" type="button" disabled><kbd>SPACE</kbd> 猛拽</button></div>
+          </div>
+          <div class="rope-readouts"><div><div class="struggle-meter-label"><span id="struggleLabel">掌控度</span><b id="strugglePercent">0%</b></div><div class="struggle-track"><i id="struggleFill" style="width:0%"></i></div></div><div><div class="struggle-meter-label tension-label"><span>绳索张力</span><b id="tensionValue">0%</b></div><div class="tension-track"><span class="tension-safe"></span><i id="tensionFill" style="width:0%"></i></div></div></div>
+          <p id="struggleHint">按住左键辅助牵引，松开缓冲挣扎</p>
+          <div class="rope-meta"><span>绳索耐久 <b id="ropeIntegrity">100%</b></span><span>右键 / Q 完全解绳</span></div>
+          <div class="danger-track" title="失控风险"><i id="dangerFill" style="width:0%"></i></div>
+        </div>
+        <div id="gatePanel" class="gate-panel hidden" aria-label="牛栏关门"><p id="gateHint">把整头牛赶进栏，自己留在栏外门闩旁。</p><button id="gateBtn" type="button" disabled><kbd>E</kbd> 栏外关门</button></div>
+        <div class="overlay" id="overlay">
+          <div class="welcome-card ranch-menu" id="welcomeCard">
+            <div class="welcome-journey"><div id="welcomeStoryArt" class="welcome-story-art" aria-hidden="true"></div><span class="welcome-kicker">WEST VIRGINIA · 雪松溪牧场</span><h2 id="welcomeTitle">先把这一程骑稳。</h2><p id="welcomeDescription">从西弗吉尼亚的家族牧场出发。练习赶牛与控绳，准备你的第一场奖金赛。</p><div class="story-preview"><span class="story-preview-label">正在走的这一章</span><p id="storySummary">第一章 · 围栏以外。林野带着大学录取信，走向镇上的赛场。</p></div><div class="welcome-story-actions"><button id="welcomeStoryBtn" type="button">打开故事旅程 <span>↗</span></button><button id="prologueReplayBtn" type="button">重看开场</button></div></div>
+            <div class="welcome-preparation"><div class="menu-section-label">出发前的准备 <span>READY TO RIDE</span></div><div class="career-wallet"><span>学业基金 <b id="careerMoney">$0</b></span><span>大赛冠军 <b id="careerWins">0</b> 场</span></div><div id="careerProgress" class="career-progress">累计入栏 0 头 · 解锁牛种与坐骑</div>
+              <div class="preparation-grid"><div id="trainingOptions" class="training-options selection-field"><label for="trainingSelect">练习目标</label><select id="trainingSelect" aria-label="选择训练牛，锁定目标显示解锁条件"></select><p class="selection-note">25 种个性牛，锁定目标也会显示。</p></div><div class="horse-options selection-field"><label for="horseSelect">出场坐骑</label><select id="horseSelect" aria-label="选择出场坐骑"></select><p id="horseDetail" class="selection-note">栗影：速度、转向与牵引均衡。</p></div><div class="outfit-options selection-field"><label for="outfitSelect">牛仔衣橱 <small>夺冠解锁</small></label><select id="outfitSelect" aria-label="选择牛仔服装"></select><p class="selection-note">每一套新衣，都留着赛场的故事。</p></div></div>
+              <button class="primary-button" id="startBtn">开始训练 <span>↗</span></button><div class="special-challenge"><button id="specialCowBtn" type="button">挑战半导体牛 <span>↗</span></button><p>它会直立投石，听到喊声记得闪避。</p></div><span class="start-note">走位赶牛 · 绿区控绳 · 栏外关门</span><a class="study-return-menu" href="../../practice/index.html">← 返回题库继续学习</a>
+            </div>
+          </div>
+          <div class="round-card hidden" id="roundCard"><span class="welcome-kicker">GATE CLOSED · KEEP THE STREAK</span><h2 id="roundTitle">牛栏关好了！</h2><p id="roundDetail">下一头即将入场，准备继续！</p><div class="round-score"><span>本次得分</span><strong id="roundPoints">0</strong></div><button class="primary-button" id="nextRoundBtn">立即放牛 <span>↗</span></button><button class="text-button hidden" id="trainingChangeBtn">换一头练习</button></div>
+          <div class="result-card hidden" id="resultCard"><span class="welcome-kicker" id="resultKicker">NICE RIDING, COWBOY</span><h2 id="resultTitle">牛仔大赛完成！</h2><p id="resultDetail"></p><div class="result-stats"><div><span>总积分</span><strong id="finalScore">0</strong></div><div><span>抓牛总数</span><strong id="finalCombo">0</strong></div><div><span>成功闪避</span><strong id="accuracy">0</strong></div></div><div class="result-reward"><span>本场游戏奖金</span><strong id="resultPrize">$0</strong><p id="resultStory">每一场比赛，都离大学目标更近一点。</p></div><button class="primary-button" id="againBtn">重新比赛 <span>↗</span></button><button class="text-button" id="resultMenuBtn">返回牧场 · 故事旅程与换装</button></div>
+          <div class="pause-card hidden" id="pauseCard"><span class="welcome-kicker">TAKE A BREATHER</span><h2>歇一会儿，牛仔。</h2><p>牧场已暂停，准备好再回到马背。</p><button class="primary-button" id="resumeBtn">继续骑行 <span>↗</span></button><button class="text-button" id="restartBtn">重试当前目标</button><span class="footer-dot">·</span><button class="text-button" id="menuBtn">返回牧场</button><a class="study-return-menu" href="../../practice/index.html">← 返回题库继续学习</a></div>
+        </div>
+        <div class="touch-controls" aria-label="触屏移动"><button data-dir="KeyW" aria-label="向上">↑</button><div><button data-dir="KeyA" aria-label="向左">←</button><button data-dir="KeyS" aria-label="向下">↓</button><button data-dir="KeyD" aria-label="向右">→</button></div></div>
+        <button id="spurBtn" class="spur-button" type="button" aria-label="按住让马匹冲刺"><span>↗</span>冲刺<small>按住</small></button>
+      </div>
+      <div class="game-bottombar"><div class="power-status"><span id="powerLabel">套索可选</span><div class="power-track"><span class="sweet-zone"></span><i id="powerFill"></i></div><b id="powerPercent">0%</b></div><span class="status-hint" id="statusHint">先靠走位赶牛；需要辅助时再按住左键蓄力</span><div class="record">个人最佳 <b id="best">0</b> <span>PTS</span></div></div>
+    </section>
+
+    <footer class="controls-bar" aria-label="常用操作"><span><kbd>WASD</kbd> 走位赶牛</span><span><b>左键</b> 套索 / 控绳</span><span><kbd>SPACE</kbd> 猛拽</span><span>右键 / <kbd>Q</kbd> 解绳</span><span><kbd>SHIFT</kbd> 加速</span><span><kbd>E</kbd> 栏外关门</span><span><kbd>ESC</kbd> 暂停 · <kbd>F11</kbd> 全屏</span><span><kbd>R</kbd> 重试 / 比赛 −8秒</span></footer>
+  </main>
+
+  <dialog id="storyDialog" class="narrative-dialog" aria-labelledby="storyTitle">
+    <header class="journal-header"><div><span class="narrative-eyebrow">WEST VIRGINIA · A FAMILY RANCH STORY</span><strong>山路与马蹄 <small class="story-version">v8</small></strong></div><div><button id="journalReplayBtn" type="button">重看开场</button><button id="storyCloseBtn" type="button" aria-label="关闭故事旅程">×</button></div></header>
+    <nav id="storyChapterList" class="chapter-list" aria-label="故事章节"></nav>
+    <div class="journal-layout"><aside class="journal-art-panel"><div id="storyArt" class="story-art"></div><div class="story-art-caption"><span id="storyLocation">西弗吉尼亚州 · 雪松溪镇</span><p id="storySceneTitle">还没收好的录取信</p></div><div class="story-goal-card"><span class="story-section-label">这一章的目标</span><p id="storyObjective">赢下 1 场大赛，学业基金达到 $300。</p><div id="storyProgress" class="story-progress"></div><div class="story-goal-track"><i id="storyGoalFill" style="width:0%"></i></div><p id="storyReward" class="story-reward-text"></p></div></aside>
+      <article class="journal-reading"><span id="storyChapterStatus" class="chapter-status">旅程进行中</span><h2 id="storyTitle">第一章 · 围栏以外</h2><p id="storyText" class="story-letter">林野把录取信放进旧夹克，走向了赛场。</p><div id="storyDialogue" class="story-dialogue"></div><p id="storySceneLock" class="scene-lock"></p><div class="scene-navigation"><button id="storyScenePrevBtn" type="button" aria-label="上一幕">←</button><span id="storySceneCount">01 / 03 · 场景</span><button id="storySceneNextBtn" type="button">下一幕 →</button></div></article>
+    </div><footer class="journal-footer"><div class="story-pages"><button id="storyPrevBtn" type="button">← 上一章</button><span>每一场胜利，都留下一段故事。</span><button id="storyNextBtn" type="button">下一章 →</button></div><p class="story-footnote">现代背景的虚构故事，$5,200 是第一学年的资金缺口。剧情与奖金保存在本机。完整大赛第一名、仍有生命且至少入栏 3 头牛才计冠军。</p></footer>
+  </dialog>
+  <dialog id="prologueDialog" class="prologue-dialog" aria-labelledby="prologueTitle"><div id="prologueArt" class="prologue-art"></div><div class="prologue-vignette"></div><header class="prologue-header"><span>荒野套牛 · 山路与马蹄</span><div><a class="study-return" href="../../practice/index.html">← 返回题库</a><button id="prologueSkipBtn" type="button">跳过开场</button></div></header><div class="prologue-copy"><span id="prologueKicker" class="narrative-eyebrow">WEST VIRGINIA</span><h2 id="prologueTitle">山谷尚未醒来</h2><p id="prologueText"></p><blockquote><span id="prologueQuote"></span><cite id="prologueSpeaker"></cite></blockquote></div><footer class="prologue-footer"><div id="prologueDots" class="prologue-dots" aria-label="序章进度"></div><div><button id="prologuePrevBtn" type="button" aria-label="上一幕">←</button><button id="prologueNextBtn" type="button">继续 <span>→</span></button></div></footer></dialog>
+  <dialog id="helpDialog"><button class="close-dialog" id="closeHelpBtn" aria-label="关闭说明">×</button><span class="welcome-kicker">HOW TO HERD</span><h2>赶进中央牛栏，再关门。</h2><div class="mode-help"><p><strong>训练模式</strong> 选择已解锁的牛练习，锁定目标仍显示在列表里。训练不限时，生命归零会恢复。累计入栏解锁牛种与坐骑。</p><p><strong>牛仔大赛</strong> 从 3 分钟开始，入栏可以加时，整场最多 4 分钟。每次出一头，关门后自动放下一头，连胜加分。留意每头牛入场后的 12 秒快速套索机会。排行榜对手均为电脑；时间耗尽或生命归零结束。</p><p><strong>林野的大学路</strong> 为西弗吉尼亚牧场家的孩子补齐第一学年资金缺口。完整大赛夺冠解锁衣服；章节同时检查冠军数与基金，达标后可看新结局。单头牛入栏不计冠军，目标见「故事旅程」。</p></div><ol><li><strong>WASD 走位，把牛赶向中央</strong><p>骑到牛的侧后方施压，挡住它远离中央牛栏的退路，给入口留出空间。牛跑得更快，也会急停、横跳和折返，观察技能后抢到合适的位置。可以不用套索完成赶牛。</p></li><li><strong>选马，按 Shift 抢位和闪避</strong><p>灵巧马善转向，耐力马适合绕行，挽马牵引有力，野马速度更快。Shift 消耗耐力加速，松开恢复。冲撞和石头会扣血；听见“牛来，半导体跌了”，转向离开落点。</p></li><li><strong>套中后，把牛标留在绿色控制区</strong><p>鼠标瞄准，左键蓄力、松开投绳。套中后按住左键让绿区上升，松开让它下降；牛标留在绿区时积攒猛拽力量。准备好后按空格或点击「猛拽」。注意张力和绳索耐久，右键或 Q 可完全解绳。</p></li><li><strong>牛全身入栏，骑手留外面关门</strong><p>把整头牛送进中央绿色牛栏，自己站到栏外门闩旁，按 E 或点击「栏外关门」。门完全关好才算成功，关门时牛逃出会中断。</p></li></ol><p class="help-tip"><kbd>R</kbd> 训练重试，比赛扣 8 秒重试。<kbd>ESC</kbd> 暂停，<kbd>F11</kbd> 全屏。点击开始后播放音乐，<kbd>N</kbd> 换下一首，音乐和音效可分别关闭；切换窗口自动暂停。</p><button class="primary-button" id="gotItBtn">明白了，上马赶牛 <span>↗</span></button></dialog>
+  <script src="catalog.js"></script><script src="story.js"></script><script src="art.js"></script><script src="audio.js"></script><script src="story-ui.js"></script><script src="game.js"></script><script src="mobile.js"></script>
+</body>
+</html>

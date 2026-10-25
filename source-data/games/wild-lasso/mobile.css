@@ -1,0 +1,82 @@
+@charset "UTF-8";
+/* Touch-only presentation. Desktop controls and keyboard behavior are untouched. */
+body.touch-mode{overscroll-behavior:none;-webkit-user-select:none;user-select:none}
+.touch-mode .app{padding:4px max(6px,env(safe-area-inset-right)) 4px max(6px,env(safe-area-inset-left));gap:4px;grid-template-rows:40px minmax(0,1fr);height:100dvh;min-height:0;display:grid}
+.touch-mode .controls-bar,.touch-mode .touch-controls,.touch-mode #spurBtn{display:none!important}
+.touch-mode .site-header{min-height:0;grid-template-columns:1fr auto 1fr;gap:8px;padding:0}
+.touch-mode .brand{font-size:13px;gap:5px;letter-spacing:1px}.touch-mode .brand-mark{width:29px;height:29px}.touch-mode .brand small{font-size:6px}
+.touch-mode .mode-switch{grid-row:auto;grid-column:auto;justify-self:center}.touch-mode .mode-switch button{min-height:32px;font-size:10px;padding:4px 9px}.touch-mode .mode-switch small{display:none}
+.touch-mode .header-tools{grid-row:auto;grid-column:auto;justify-self:end;gap:5px}.touch-mode .letter-button{min-height:32px;font-size:9px}.touch-mode .icon-button{width:32px;height:32px}
+.touch-mode .game-shell{height:auto;min-height:0;grid-template-rows:29px minmax(0,1fr);border-radius:6px}
+.touch-mode .game-topbar{padding:0 8px}.touch-mode .game-actions{gap:10px}.touch-mode .small-button{min-width:27px;min-height:27px}.touch-mode .game-bottombar{display:none}
+.touch-mode .arena{padding:0!important;min-height:0}.touch-mode .arena::after{display:none!important}.touch-mode .arena>.overlay{right:0!important;overflow-y:auto;overscroll-behavior:contain;padding:8px;align-items:center;touch-action:pan-y}
+.touch-mode .overlay>div{max-height:100%;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y}
+.touch-mode .welcome-card{max-width:min(780px,calc(100vw - 38px));margin:auto}.touch-mode .welcome-card select{min-height:36px}.touch-mode .primary-button{min-height:40px}
+.touch-mode .selection-note{font-size:9px}.touch-mode .start-note{font-size:0!important}.touch-mode .start-note::after{content:"左摇杆骑马 · 右手蓄力瞄准 · 松手抛绳";font-size:9px}
+.touch-mode .arena>.hud,.touch-mode #missionPanel,.touch-mode #riderHud,.touch-mode #strugglePanel,.touch-mode #gatePanel,.touch-mode #racePanel,.touch-mode .arena-tag{display:none!important}
+.touch-mode.touch-live .app{padding:0;gap:0;grid-template-rows:minmax(0,1fr)}
+.touch-mode.touch-live .site-header,.touch-mode.touch-live .game-topbar{display:none}
+.touch-mode.touch-live .game-shell{grid-template-rows:minmax(0,1fr);border:0;border-radius:0;box-shadow:none}
+.touch-mode .arena canvas{touch-action:none}
+.mobile-controls{position:absolute;inset:0;z-index:5;pointer-events:none;touch-action:none;color:#684627;--safe-l:max(10px,env(safe-area-inset-left));--safe-r:max(10px,env(safe-area-inset-right));--safe-b:max(10px,env(safe-area-inset-bottom));font-family:"Microsoft YaHei",sans-serif}
+.mobile-controls[hidden],.mobile-controls [hidden],.mobile-rotate[hidden]{display:none!important}
+.mobile-controls button,.mobile-stick{pointer-events:auto;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.mobile-controls button{border:1px solid #a78552;border-bottom:3px solid #94703f;box-shadow:0 2px 9px #66482025;background:#f9e9c9eb;color:#77522e;padding:0;line-height:1.3;text-align:center;transition:background .1s,box-shadow .1s;outline-offset:2px}
+.mobile-controls button:active:not(:disabled){transform:none}.mobile-controls button:disabled{opacity:.42}.mobile-controls button.is-held{background:#d9bd87;box-shadow:inset 0 2px 7px #6c4e3230}
+.mobile-small{position:absolute;width:58px;height:58px;border-radius:17px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.mobile-small strong{font-size:13px;font-weight:800}.mobile-small small{font-size:9px;color:#95764d}.mobile-small>span{font-size:22px;line-height:1}
+.mobile-pause{top:max(7px,env(safe-area-inset-top));right:var(--safe-r);width:48px;height:48px;border-radius:13px}.mobile-pause>span{font-size:20px}.mobile-pause small{font-size:9px}
+.mobile-stick{position:absolute;left:var(--safe-l);bottom:calc(var(--safe-b) + 4px);width:126px;height:126px;border:2px solid #ae8d5d99;border-radius:50%;background:radial-gradient(circle,#f8e8c455 0 26%,#8a683414 27% 28%,#fff1d33b 29% 66%,#c7a26d3b 67%);box-shadow:inset 0 0 0 7px #f8e9c343,0 3px 10px #75572f10}
+.mobile-stick.is-held{border-color:#967040;background-color:#f3e1b64d}.mobile-knob{position:absolute;top:calc(50% - 24px);left:calc(50% - 24px);width:48px;height:48px;border:1px solid #a98148;border-radius:50%;background:radial-gradient(circle at 35% 30%,#f7e3bd,#b89257);box-shadow:0 3px 7px #74522e35;pointer-events:none}
+.mobile-stick-cross::before,.mobile-stick-cross::after{content:"";position:absolute;background:#a8854b38;left:calc(50% - 1px);top:12px;width:2px;height:calc(100% - 24px)}.mobile-stick-cross::after{transform:rotate(90deg)}
+.mobile-stick-label{position:absolute;bottom:7px;left:0;right:0;text-align:center;font-size:9px;font-weight:700;color:#947449;pointer-events:none}
+.mobile-spur{left:calc(var(--safe-l) + 32px);bottom:calc(var(--safe-b) + 146px);width:62px;height:58px}.mobile-spur>span{font-size:18px}.mobile-spur strong{font-size:12px}.mobile-spur small{font-size:8px}
+.mobile-action{position:absolute;right:var(--safe-r);bottom:var(--safe-b);width:96px;height:96px;border-radius:50%;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:4px;--action-power:0deg;isolation:isolate}
+.mobile-action::before{content:"";position:absolute;inset:-5px;z-index:-1;border-radius:50%;background:conic-gradient(#c99648 var(--action-power),#c3a16c38 var(--action-power));-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 0);mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 0)}
+.mobile-action strong{font-size:21px;font-weight:800}.mobile-action small{font-size:8px;white-space:nowrap;color:#8f7148}.mobile-aim-arrow{font-size:16px;line-height:16px;color:#b48d49;transform-origin:50% 50%}.mobile-action.is-sweet{border-color:#79945c;background:#e8edcfea}.mobile-action.is-sweet::before{background:conic-gradient(#7f9f5e var(--action-power),#aab78235 var(--action-power))}
+.mobile-action.is-tethered{background:#e7e9cdee}.mobile-action.is-tethered strong{font-size:20px}
+.mobile-yank{right:calc(var(--safe-r) + 10px);bottom:calc(var(--safe-b) + 116px);width:70px;height:62px;background:#d7ad69ed!important}.mobile-yank.is-ready{background:#b96c38!important;border-color:#8f532b;color:#fff2d0;box-shadow:0 0 0 3px #e6bf6d70,0 3px 12px #78502b40}.mobile-yank.is-ready small{color:#fff0c8}
+.mobile-release{right:calc(var(--safe-r) + 94px);bottom:calc(var(--safe-b) + 111px);width:51px;height:49px;border-radius:13px}.mobile-release strong{font-size:11px}
+.mobile-aim-cow{right:calc(var(--safe-r) + 93px);bottom:calc(var(--safe-b) + 44px);width:51px;height:52px;border-radius:13px}.mobile-aim-cow strong{font-size:10px}.mobile-aim-cow>span{font-size:21px}
+.mobile-duel{position:absolute;right:calc(var(--safe-r) + 99px);bottom:calc(var(--safe-b) + 1px);height:96px;width:35px;pointer-events:none;padding:0 4px}.mobile-duel-track{position:relative;width:27px;height:77px;border:1px solid #b59b70;border-radius:7px;background:#f6e9c9e8;overflow:hidden;box-shadow:inset 0 1px 4px #92764a25}.mobile-duel-track i{position:absolute;left:2px;right:2px;bottom:50%;height:30%;transform:translateY(50%);border:1px solid #6e894f;border-radius:3px;background:#8cae65ba}.mobile-duel-track b{position:absolute;left:0;right:0;bottom:50%;transform:translateY(50%);text-align:center;color:#7b4d28;font-size:16px;line-height:16px;text-shadow:0 1px #fff8df,-1px 0 #fff8df,1px 0 #fff8df}.mobile-duel.matched .mobile-duel-track{border-color:#718f4f;box-shadow:0 0 0 2px #b5c58b55}.mobile-duel.matched b{color:#47703c}.mobile-duel>small{display:block;text-align:center;font-size:8px;color:#91784e;margin-top:3px}
+.mobile-controls:has(.mobile-duel:not([hidden])) .mobile-aim-cow{visibility:hidden;pointer-events:none}
+.mobile-gate{position:absolute;bottom:var(--safe-b);left:50%;transform:translateX(-50%);min-width:110px;height:48px;padding:5px 12px!important;border-radius:13px;display:grid;grid-template-columns:20px auto;align-items:center;gap:0 5px}.mobile-gate:active:not(:disabled){transform:translateX(-50%)!important}.mobile-gate>span{font-size:23px;grid-row:1 / 3}.mobile-gate strong{font-size:14px}.mobile-gate small{font-size:8px;color:#91794d;grid-column:2}.mobile-gate.is-ready{background:#8d9f62;border-color:#667b43;color:#fff4d3;box-shadow:0 0 0 3px #c7d09d80}.mobile-gate.is-ready small{color:#f8f3d0}
+.mobile-scoreboard{position:absolute;top:max(7px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:11px;min-height:34px;padding:5px 11px;border:1px solid #e7d5ae;border-radius:11px;background:#fcf2dcdc;box-shadow:0 2px 7px #61461f10;pointer-events:none;white-space:nowrap;font-size:9px;color:#9a7d51}.mobile-scoreboard b{color:#6c512f;font:700 13px Georgia,serif;margin-left:2px}.mobile-scoreboard #mobileTime{color:#8a6333;font-weight:700;font-size:12px}
+.mobile-vital{width:68px;display:grid;gap:3px}.mobile-vital span{display:flex;justify-content:space-between;align-items:center;font-size:8px}.mobile-vital b{font-size:10px}.mobile-vital i{height:4px;border-radius:3px;background:#d8c7a7;overflow:hidden}.mobile-vital em{display:block;height:100%;background:#c2855a}.mobile-vital:last-child em{background:#859a62}.mobile-vital em.is-low{background:#bb4c34}
+.mobile-tip{position:absolute;bottom:calc(var(--safe-b) + 55px);left:50%;transform:translateX(-50%);max-width:240px;margin:0;padding:4px 9px;border-radius:9px;background:#fbefd5c4;color:#9a7c4e;text-align:center;font-size:9px;line-height:1.5;pointer-events:none}
+.mobile-rotate{position:fixed;z-index:12;left:max(10px,env(safe-area-inset-left));right:max(10px,env(safe-area-inset-right));bottom:max(10px,env(safe-area-inset-bottom));display:flex;align-items:center;justify-content:center;gap:12px;padding:12px;border:1px solid #c9a775;border-radius:12px;background:#f6e8cefa;box-shadow:0 3px 16px #31251d30;color:#735537;pointer-events:none}.mobile-rotate>span{font-size:33px}.mobile-rotate strong{display:block;font-size:13px}.mobile-rotate small{display:block;font-size:10px;margin-top:4px;color:#a48a61}
+@media(orientation:portrait){.touch-mode .app{height:100dvh;padding-bottom:86px;grid-template-rows:74px minmax(0,1fr)}.touch-mode .site-header{grid-template-columns:1fr auto;grid-template-rows:34px 34px;gap:5px}.touch-mode .header-tools{grid-column:2;grid-row:1}.touch-mode .mode-switch{grid-column:1 / -1;grid-row:2;justify-self:stretch}.touch-mode .brand{grid-column:1;grid-row:1}.touch-mode .mode-switch button{flex:1}.touch-mode .game-shell{min-height:0}.touch-mode .overlay{align-items:flex-start}.touch-mode .welcome-card{max-width:100%;width:100%}.touch-mode .game-actions{gap:8px}.touch-mode .ranch-label{font-size:8px}.touch-mode .small-button span{display:none}}
+@media(orientation:landscape) and (max-height:430px){.mobile-stick{width:112px;height:112px}.mobile-spur{left:calc(var(--safe-l) + 25px);bottom:calc(var(--safe-b) + 125px);height:53px}.mobile-action{width:87px;height:87px}.mobile-action strong{font-size:19px}.mobile-action small{font-size:7px}.mobile-yank{bottom:calc(var(--safe-b) + 104px);height:57px}.mobile-release{right:calc(var(--safe-r) + 84px);bottom:calc(var(--safe-b) + 101px);height:47px;width:48px}.mobile-aim-cow{right:calc(var(--safe-r) + 84px);bottom:calc(var(--safe-b) + 39px);height:48px;width:48px}.mobile-duel{right:calc(var(--safe-r) + 90px)}.mobile-scoreboard{padding:4px 8px;gap:8px;min-height:31px}.mobile-vital{width:56px}.mobile-tip{font-size:8px;max-width:210px}.mobile-gate{height:43px;min-width:105px}.mobile-pause{width:44px;height:44px}.touch-mode:not(.touch-live) .app{grid-template-rows:35px minmax(0,1fr)}.touch-mode .game-shell{grid-template-rows:26px minmax(0,1fr)}.touch-mode.touch-live .game-shell{grid-template-rows:minmax(0,1fr)}.touch-mode .site-header .brand{font-size:12px}.touch-mode .site-header .brand small{display:none}.touch-mode .welcome-card{max-height:100%;padding-top:12px;padding-bottom:12px}.touch-mode .primary-button{min-height:38px}}
+@media(orientation:landscape) and (max-height:340px){.mobile-stick{width:98px;height:98px}.mobile-spur{left:calc(var(--safe-l) + 21px);bottom:calc(var(--safe-b) + 109px);width:55px;height:48px}.mobile-spur small{display:none}.mobile-scoreboard{gap:7px;font-size:8px}.mobile-scoreboard .mobile-vital{width:47px}.mobile-tip{bottom:calc(var(--safe-b) + 48px);font-size:7px}.mobile-gate{height:40px}}
+
+/* Landscape phones: keep every preparation choice and the start action in the
+   first view. The full story and detailed horse statistics stay in their own UI. */
+@media(orientation:landscape) and (max-height:500px){
+  .touch-mode #welcomeCard.ranch-menu{display:grid;grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr);width:760px;max-width:calc(100% - 8px);max-height:100%;padding:0;margin:auto;align-items:stretch}
+  .touch-mode #welcomeCard .welcome-journey{padding:0 14px 8px}
+  .touch-mode #welcomeCard .welcome-story-art{height:70px;min-height:0;margin:0 -14px 6px}
+  .touch-mode #welcomeCard .welcome-kicker{font-size:7px;line-height:11px;letter-spacing:1px}
+  .touch-mode #welcomeCard h2{font-size:20px;line-height:24px;letter-spacing:.4px;margin:5px 0 4px}
+  .touch-mode #welcomeCard #welcomeDescription{font-size:10px;line-height:14px;margin:0 0 6px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+  .touch-mode #welcomeCard .story-preview{padding-top:5px;margin:0}
+  .touch-mode #welcomeCard .story-preview-label{display:none}
+  .touch-mode #welcomeCard .story-preview>p{font-size:10px;line-height:14px;margin:0;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+  .touch-mode #welcomeCard .welcome-story-actions{gap:8px;margin-top:5px}
+  .touch-mode #welcomeCard .welcome-story-actions button{min-height:34px;padding:3px 0;font-size:10px}
+  .touch-mode #welcomeCard .welcome-preparation{padding:9px 14px 10px}
+  .touch-mode #welcomeCard .menu-section-label{font-size:11px;line-height:15px}
+  .touch-mode #welcomeCard .menu-section-label>span{font-size:6px;letter-spacing:.5px}
+  .touch-mode #welcomeCard .career-wallet{margin:4px 0;padding:0;border:0;font-size:9px;line-height:20px;gap:8px}
+  .touch-mode #welcomeCard .career-wallet b{font-size:18px;line-height:20px;margin-left:3px}
+  .touch-mode #welcomeCard .career-progress{font-size:8px;line-height:12px;margin:0 0 5px;padding:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .touch-mode #welcomeCard .preparation-grid,.touch-mode #welcomeCard .preparation-grid:has(#trainingOptions.hidden){display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px 8px;margin:0 0 7px}
+  .touch-mode #welcomeCard .preparation-grid .selection-field{display:flex;flex-direction:column;align-items:stretch;gap:3px;grid-column:auto;margin:0;min-width:0}
+  .touch-mode #welcomeCard #trainingOptions{grid-column:1 / -1;display:grid;grid-template-columns:64px minmax(0,1fr);align-items:center;gap:7px}
+  .touch-mode #welcomeCard .selection-field label{font-size:10px;line-height:12px;margin:0}
+  .touch-mode #welcomeCard .selection-field label small,.touch-mode #welcomeCard .preparation-grid .selection-note{display:none}
+  .touch-mode #welcomeCard .selection-field select{width:100%;height:34px;min-height:34px;padding:0 6px;font-size:10px;line-height:normal}
+  .touch-mode #welcomeCard #startBtn{height:40px;min-height:40px;padding:8px 12px;margin:0;font-size:12px}
+  .touch-mode #welcomeCard .special-challenge{margin:6px 0 0;padding:0;border:0}
+  .touch-mode #welcomeCard .special-challenge button{height:34px;min-height:34px;font-size:10px;padding:0 10px}
+  .touch-mode #welcomeCard .special-challenge p,.touch-mode #welcomeCard .start-note{display:none}
+}
