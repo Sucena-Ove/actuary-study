@@ -72,7 +72,8 @@ def module_cards():
         rows.append(f'<a class="module-card" href="{module_link(m)}"><span>{len(qs)} 题 ↗</span><h3>{esc(m)}</h3><p>{esc(" · ".join(t for t,_ in tags.most_common(4)))}</p></a>')
     return ''.join(rows)
 advanced=[q for q in questions if q['id']>=10001]
-advanced_text=f'新增 {len(advanced)} 道进阶题' if advanced else '从条件分布到 UMVUE'
+addition=bank.get('revisionAdditions',{})
+advanced_text=f'本次新增 {addition["count"]} 道回忆改编题' if addition.get('count') else (f'新增 {len(advanced)} 道进阶题' if advanced else '从条件分布到 UMVUE')
 home=f'''<section class="hero"><div><span class="eyebrow">一本随时翻开的概率学习笔记</span><h1>把一道题想明白，<br>比记住答案更重要。</h1><p>从概率分布到统计推断，把零散考点连起来。每天掷一次骰子，随机领取一组题，先独立思考，再用分步解析检查每一步。</p><div class="actions"><a class="button primary" href="practice/index.html">开始今天的练习 →</a><a class="button" href="questions.html">翻一翻题目目录</a></div></div><aside class="notebook"><div class="label">本周的思考题 / 无偏估计</div><h2>已知总和 T = N，<br>怎样估计单点概率？</h2><div class="formula">T = X₁ + ⋯ + Xₙ = N<br>δₖ(N) = P(X₁ = k | T = N)</div><p class="note">从指示变量的无偏性出发，<br>推导关于 N 的一般 UMVUE。</p><a href="notes/zero-truncated-poisson.html">读这篇学习笔记 →</a></aside></section>
 <div class="statline"><div><b>{len(questions)}</b><span>道题，逐题配解析</span></div><div><b>{len(modules)}</b><span>个知识模块</span></div><div><b>0</b><span>账号门槛，掷骰开练</span></div></div>
 <section class="section"><div class="section-head"><h2>从一个薄弱点开始。</h2><a href="topics.html">完整知识点目录 →</a></div><div class="module-grid">{module_cards()}</div></section>
@@ -106,7 +107,7 @@ for q in questions:
 
 article=(HERE/'content'/'zero-truncated-poisson.html').read_text(encoding='utf-8-sig')
 practice_order={qid:i for i,qid in enumerate([505,510,508,509,506,503,504,507,511,512,501,502,513,514,515,516])}
-advanced_links=''.join(f'<li><a href="../questions/{q["id"]:03d}.html">#{q["id"]} · {esc(q["topic"])}</a></li>' for q in sorted((q for q in questions if q['id']>=501),key=lambda q:practice_order.get(q['id'],q['id'])))
+advanced_links=''.join(f'<li><a href="../questions/{q["id"]:03d}.html">#{q["id"]} · {esc(q["topic"])}</a></li>' for q in sorted((q for q in questions if '零截断泊松' in q['tags']),key=lambda q:practice_order.get(q['id'],q['id'])))
 if not advanced_links:advanced_links=''.join(f'<li><a href="../questions/{q["id"]:03d}.html">#{q["id"]} · {esc(q["topic"])}</a></li>' for q in questions if '零截断泊松' in q['tags'])
 article=article.replace('{{QUESTION_LINKS}}',advanced_links)
 page('notes/zero-truncated-poisson.html','零截断泊松：给定T=N的条件分布与UMVUE','给定零截断泊松样本和T=N，推导固定k的单点概率UMVUE，含一般n及n=2的公式、支持范围、Stirling数与完备充分性证明。',f'<div class="page-head">{breadcrumb("学习笔记","../")}<span class="eyebrow">Study note / 统计推断</span><h1>已知 T = N，怎样求一般条件分布与 UMVUE？</h1><p>以 pλ(k)/(1 − e⁻λ) 为待估函数，保留 N 为字母，写出条件分布、无偏估计与最小方差依据。</p></div><article class="article-body">{article}</article>',prefix='../',kind='article')
@@ -114,7 +115,7 @@ page('notes/zero-truncated-poisson.html','零截断泊松：给定T=N的条件�
 source_rows=''.join('<li><strong>'+esc(s['title'])+'</strong>：'+esc(s.get('description',s.get('kind','')))+(f' <a href="{esc(s["url"])}" rel="noopener noreferrer">参考链接</a>' if s.get('url') and urlparse(s['url']).scheme in ('https','http') else '')+'</li>' for s in bank['sources'])
 about=f'<div class="page-head">{breadcrumb("关于与来源")}<h1>关于这本学习题库</h1><p>把考试复盘、教材知识点和日常练习整理成一处可以查阅的地方。</p></div><article class="article-body"><h2>题库说明</h2><p>当前收录 {len(questions)} 题，包含题干、四个选项、答案、分步解析、易错提醒与知识点标签。考试回忆题的缺失条件与数值由编者补全，不能视为官方原题。原创同型题不代表教材原书或 SOA 原题。</p><p>{esc(bank["conventions"])}</p><h2>公开学习与本机进度</h2><p>题目目录只展示题号和知识点，题干与解析统一在刷题区展示；学习笔记继续公开。网页不需要注册，也不提供账号后台。刷题进度、错题和收藏保存在当前浏览器本机；网站不会自动上传学习记录。浏览器清理数据、更换设备或使用无痕窗口时，记录可能丢失，请在刷题区“我的”中导出备份。</p><p>手机 App 与此网站不会自动互通账号。兼容的本地学习进度可以通过导出、导入手动转移；账号同步需要另行部署服务。</p><h2>资料与出处</h2><ul>{source_rows}</ul><h2>阅读与纠错</h2><p>来源说明用于辨别题目出处和改写范围。请以题干明确写出的条件为准，注意参数化、独立性与支持集。发现疑问时，可记录题号与推导进行复核。</p><p class="note">本网站与中国精算师协会、SOA、相关院校或出版社无隶属关系。主科目与拓展标签用于学习安排，不构成官方考试范围承诺。</p></article>'
 contact='<section id="contact"><h2>联系作者与题目反馈</h2><p>这是一个边学习、边整理的概率统计学习站。如果发现题目条件有歧义、答案有疑问，或想交流一种更直观的解法，欢迎带上题号和推导到 B 站主页私信。</p><p><strong>B站 UID：247892366</strong></p><p><a class="button primary" href="https://space.bilibili.com/247892366" rel="noopener noreferrer">前往作者 B 站主页 ↗</a></p></section>'
-about=about.replace('</article>','<h2>每日抽题与自由练习</h2><p>每天按北京时间掷一次 120 面骰子，系统随机抽出对应数量的不同题目。未解锁时当天只能练这一组，刷新不会重新抽取；可以回顾本组，次日重新抽取。原有 516 题与 24 道原创进阶题已合并，所有难度都可能被抽到。</p><p>输入有效密钥后，可解除每日题数和选题限制。密钥会保存在当前浏览器的独立记录中，下次打开时自动验证并恢复自由练习；不会写入网址或学习进度导出文件。共享电脑使用完可点击“清除本机解锁”。清理网站数据、无痕模式或更换浏览器后需要重新输入。</p><p>本网站没有服务器身份验证。每日限制和解锁状态在本机执行，清理或修改本机数据可以绕过；公开题库文件仍可被下载，不能提供严格的反爬或付费访问控制。50 个密钥可重复使用，不绑定账号。</p>'+contact+'</article>')
+about=about.replace('</article>','<h2>每日抽题与自由练习</h2><p>每天按北京时间掷一次 120 面骰子，系统随机抽出对应数量的不同题目。未解锁时当天只能练这一组，刷新不会重新抽取；可以回顾本组，次日重新抽取。题库包含回忆改编题与原创进阶题，所有难度都可能被抽到；具体出处和补全条件见每题说明。</p><p>输入有效密钥后，可解除每日题数和选题限制。密钥会保存在当前浏览器的独立记录中，下次打开时自动验证并恢复自由练习；不会写入网址或学习进度导出文件。共享电脑使用完可点击“清除本机解锁”。清理网站数据、无痕模式或更换浏览器后需要重新输入。</p><p>本网站没有服务器身份验证。每日限制和解锁状态在本机执行，清理或修改本机数据可以绕过；公开题库文件仍可被下载，不能提供严格的反爬或付费访问控制。50 个密钥可重复使用，不绑定账号。</p>'+contact+'</article>')
 page('about.html','关于、联系方式与资料来源','精算随身练题库来源说明、B站联系方式、本机学习记录与静态网站使用方式。',about)
 
 shutil.copytree(HERE/'assets',out/'assets',dirs_exist_ok=True)
