@@ -15,7 +15,7 @@
 1. `sql/waline.pgsql`：原样保留的 Waline 官方表结构，创建 Comment、Users 和 Counter 表。
 2. `sql/service-guards.sql`：增加原子限频表和索引。
 
-官方第一份 SQL 只在全新数据库执行一次，不要重复运行或为了消除“已存在”报错而删除表。随后从 Neon Connect 复制连接信息到 Netlify 的私密环境变量。推荐 Neon pooled hostname（名称含 `-pooler`），端口 5432；不要把整条连接串粘进公开文件。
+官方第一份 SQL 只在全新数据库执行一次，不要重复运行或为了消除“已存在”报错而删除表。随后从 Neon Connect 复制连接信息到 Netlify 的服务端环境变量，按下文区分秘密与普通配置。推荐 Neon pooled hostname（名称含 `-pooler`），端口默认 5432；不要把整条连接串粘进公开文件。
 
 ### 2. Netlify 项目
 
@@ -32,14 +32,18 @@
 
 Netlify 应检测本目录的 `netlify.toml` 和 `package-lock.json`。安装禁用生命周期脚本；build 只校验题号清单并复制锁定版本的管理员 JavaScript 到本站。没有自动买域名或付费动作。
 
+函数包使用 `included_files` 的负向匹配排除 `node_modules/@mathjax/**`：服务端已经强制关闭 TeX，相关引擎和字体不会执行，避免完整依赖树超过 Netlify/Lambda 的 250 MiB 解压大小限制。该配置只影响部署包，不删除安装目录或原始文件。不要顺手排除 SQLite、CloudBase、LeanCloud 或 IP 地区库；Waline 启动时或后台仍会加载相关模块。将来若启用服务端 TeX，必须同时重新设计打包并重新验收，不能只改环境变量。
+
 取得 `https://项目名.netlify.app` 后，在 Netlify Project configuration → Environment variables 设置下面字段，作用域为 Functions（或全部作用域），Production 环境。不要给公开部署预览共享生产库和初始化密钥。
+
+只把凭据类字段标为 **Secret**：`PG_PASSWORD`、`JWT_TOKEN`、`BOOTSTRAP_TOKEN`，以及启用人机验证后的 `TURNSTILE_SECRET`。公开网址、端口、布尔开关等非敏感配置不要标为 Secret；它们可能正常出现在文档或默认代码中，误标会触发 Netlify secrets scan 并阻止发布。不要为了绕过这种配置误报关闭秘密扫描，也不要把真正的密码改成普通公开配置。
 
 | 字段 | 内容 |
 | --- | --- |
-| `SERVER_URL` | `https://项目名.netlify.app/.netlify/functions/comment`，末尾不要额外路径 |
-| `SITE_URL` | `https://sucena-ove.github.io/actuary-study/` |
+| `SERVER_URL` | `https://项目名.netlify.app/.netlify/functions/comment`，末尾不要额外路径；普通配置，不标 Secret |
+| `SITE_URL` | 可不填；默认 `https://sucena-ove.github.io/actuary-study/`。若填写，使用普通配置，不标 Secret |
 | `PG_HOST` | Neon 的 pooled hostname，不含 `https://` |
-| `PG_PORT` | `5432` |
+| `PG_PORT` | 可不填；默认 `5432`。若填写，使用普通配置，不标 Secret |
 | `PG_DB` | Neon 数据库名 |
 | `PG_USER` | Neon 数据库用户名 |
 | `PG_PASSWORD` | Neon 数据库密码，仅服务端秘密 |

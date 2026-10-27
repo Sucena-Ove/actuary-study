@@ -10,7 +10,10 @@
   directory = "netlify/functions"
   node_bundler = "esbuild"
   external_node_modules = ["@waline/vercel", "pg", "serverless-http"]
-  included_files = ["question-ids.json"]
+  # MARKDOWN_TEX is disabled in the handler. MathJax's fonts/engines are never
+  # imported on this deployment; excluding them keeps Lambda below 250 MiB.
+  # Keep all database adapters: Waline's loader requires them at startup.
+  included_files = ["question-ids.json", "!node_modules/@mathjax/**"]
 
 [[headers]]
   for = "/*"

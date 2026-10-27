@@ -67,6 +67,7 @@ test('production handler initializes pinned Waline and serves guarded management
   assert.equal(JSON.parse(health.body).ok, true);
   assert.equal(think.config('model').postgresql.ssl.rejectUnauthorized, true);
   assert.equal(think.config('model').postgresql.logSql, false);
+  assert.equal(think.config('markdown').plugin.tex, false);
   think.config('customModel', model);
   const ui = await request('/ui');
   assert.equal(ui.statusCode, 200, ui.body);
