@@ -60,7 +60,7 @@ Netlify 应检测本目录的 `netlify.toml` 和 `package-lock.json`。安装禁
 
 初始化秘密不进 URL。服务会签发仅该站可用、15 分钟过期的 HttpOnly/Secure/SameSite=Strict cookie。公开 `/api/user` 注册接口一直关闭；只有持有该 cookie 且用户表为空的请求才可创建第一个账号。数据库事务锁防止两个并发请求同时抢占管理员。已有任何账号时，后续注册全部拒绝。
 
-创建后，正常登录管理后台确认可以管理评论，再删除 Netlify 的 `BOOTSTRAP_TOKEN` 并重新部署。不要删除 `JWT_TOKEN`。日常后台地址为 `https://项目名.netlify.app/.netlify/functions/comment/ui`，可以在手机或其他电脑使用；不依赖这台电脑开机。请直接打开该地址，不使用附带 `redirect`、`token` 等参数的登录链接。
+创建后，正常登录管理后台确认可以管理评论，再删除 Netlify 的 `BOOTSTRAP_TOKEN` 并重新部署。不要删除 `JWT_TOKEN`。日常后台地址为 `https://项目名.netlify.app/.netlify/functions/comment/ui`，可以在手机或其他电脑使用；不依赖这台电脑开机。未登录时，后台会通过登录页的 `redirect=/ui` 等已验证站内路径返回原页面；外部跳转及 URL 中的 `token`、`state`、`code` 登录参数仍被拒绝。日常请直接打开上述后台地址。
 
 管理员可查看、编辑、删除、审核评论。所有通过题目评论框和回复框提交的新内容都显示匿名；后台管理权限仍由登录凭据核实。访客不能自选“管理员”昵称或发送身份字段。无登录匿名访客没有永久身份，因此不提供自行删除跨设备评论；有删除需求可向作者说明题号和评论内容。
 

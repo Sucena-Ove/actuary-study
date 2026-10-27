@@ -170,9 +170,15 @@ function createGateway({ config, waline, store, now = Date.now }) {
     }
     if (/^\/ui(?:\/[a-zA-Z0-9_-]+)*$/.test(route) && method === 'GET') {
       const uiQuery = originalEvent.queryStringParameters || {};
-      // The upstream admin UI supports login-token redirects for other sites.
-      // This single-owner dashboard does not need redirects or URL credentials.
-      if (Object.keys(uiQuery).some((key) => key !== 'lang')) return send(response(400, '请直接打开管理员登录页，不要附加跳转或登录参数。'));
+      // Access redirects unauthenticated dashboard visits back through login.
+      // Permit only those verified internal routes; upstream also supports
+      // external token redirects, which this single-owner dashboard must reject.
+      const internalRedirects = new Set(['/ui', '/ui/user', '/ui/profile', '/ui/migration']);
+      const invalidRedirect = Object.hasOwn(uiQuery, 'redirect') && (
+        route !== '/ui/login' || typeof uiQuery.redirect !== 'string' ||
+        !internalRedirects.has(uiQuery.redirect.replace(/\/$/, ''))
+      );
+      if (Object.keys(uiQuery).some((key) => !['lang', 'redirect'].includes(key)) || invalidRedirect) return send(response(400, '只允许后台站内跳转，请不要附加外部地址或登录凭据。'));
       if (route === '/ui/register' && !validSetupCookie(headers, config.bootstrapToken, now())) return send(response(403, '公开注册已关闭，请由站长通过 /setup 初始化。'));
       return send(await waline(originalEvent, context));
     }

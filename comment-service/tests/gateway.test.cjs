@@ -122,6 +122,20 @@ test('administrator UI refuses external token redirects and URL login credential
   assert.equal(forwarded.length, 0);
 });
 
+test('administrator login accepts only upstream dashboard return routes', async () => {
+  const { gateway, forwarded } = fixture();
+  for (const redirect of ['/ui', '/ui/', '/ui/user', '/ui/profile', '/ui/migration']) {
+    const result = await gateway(event('/ui/login', 'GET', null, { queryStringParameters: { redirect, lang: 'zh-CN' } }));
+    assert.equal(result.statusCode, 200, redirect);
+    assert.equal(forwarded.at(-1).queryStringParameters.redirect, redirect);
+  }
+  for (const redirect of ['https://evil.example/ui', '//evil.example/ui', '\\evil.example\\ui', '/ui/../evil', '/ui?token=x', '/ui#token=x', '%2Fui', '/ui//', '/ui/login', '', ['/ui']]) {
+    assert.equal((await gateway(event('/ui/login', 'GET', null, { queryStringParameters: { redirect } }))).statusCode, 400, String(redirect));
+  }
+  assert.equal((await gateway(event('/ui', 'GET', null, { queryStringParameters: { redirect: '/ui' } }))).statusCode, 400);
+  assert.equal((await gateway(event('/ui/login', 'GET', null, { queryStringParameters: { redirect: '/ui', token: 'injected' } }))).statusCode, 400);
+});
+
 test('setup cookies are signed, expire and reject duplicate cookie values', () => {
   const now = Date.now(); const value = makeSetupCookie(env.BOOTSTRAP_TOKEN, now);
   assert.equal(validSetupCookie({ cookie: `${COOKIE_NAME}=${value}` }, env.BOOTSTRAP_TOKEN, now), true);
