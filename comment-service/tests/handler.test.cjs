@@ -51,13 +51,14 @@ const model = (name) => ({
 const { handler } = require('../netlify/functions/comment.js');
 function request(route, method = 'GET', body, queryStringParameters = {}, extraHeaders = {}) {
   const queryString = new URLSearchParams(queryStringParameters).toString();
+  const rawBody = body === undefined ? '' : JSON.stringify(body);
   return handler({
     path: FUNCTION_PREFIX + route,
     rawUrl: origin + FUNCTION_PREFIX + route + (queryString ? `?${queryString}` : ''),
     rawQuery: queryString,
     httpMethod: method, queryStringParameters,
-    headers: { host: 'comment-handler-test.netlify.app', origin, 'content-type': 'application/json', 'x-forwarded-proto': 'https', 'x-nf-client-connection-ip': '192.0.2.14', 'user-agent': 'integration-test', ...extraHeaders },
-    body: body === undefined ? '' : JSON.stringify(body), isBase64Encoded: false,
+    headers: { host: 'comment-handler-test.netlify.app', origin, 'content-type': 'application/json', 'content-length': String(Buffer.byteLength(rawBody, 'utf8')), 'x-forwarded-proto': 'https', 'x-nf-client-connection-ip': '192.0.2.14', 'user-agent': 'integration-test', ...extraHeaders },
+    body: rawBody, isBase64Encoded: false,
   }, {});
 }
 

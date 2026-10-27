@@ -83,6 +83,23 @@ test('unknown question cannot create or read a thread', async () => {
   }
 });
 
+test('rewritten JSON receives its own UTF-8 byte length and no stale transfer encoding', async () => {
+  for (const pretty of [false, true]) {
+    const { gateway, forwarded } = fixture();
+    const input = event('/api/comment', 'POST', { url: path, comment: '中文讨论 😀', nick: '伪装昵称', unused: 'removed' });
+    input.body = JSON.stringify(JSON.parse(input.body), null, pretty ? 2 : undefined);
+    input.headers['content-length'] = String(Buffer.byteLength(input.body, 'utf8'));
+    input.headers['transfer-encoding'] = 'chunked';
+    const oldLength = input.headers['content-length'];
+    assert.equal((await gateway(input)).statusCode, 200);
+    const sent = forwarded[0];
+    assert.equal(sent.headers['content-length'], String(Buffer.byteLength(sent.body, 'utf8')));
+    assert.notEqual(sent.headers['content-length'], oldLength);
+    assert.equal(sent.headers['transfer-encoding'], undefined);
+    assert.equal(JSON.parse(sent.body).comment, '中文讨论 😀');
+  }
+});
+
 test('comments are bounded, JSON only, no control characters', async () => {
   const { gateway } = fixture();
   for (const comment of ['', ' ', '字'.repeat(2001), 'x\u0000y', null, {}]) assert.equal((await gateway(event('/api/comment', 'POST', { url: path, comment }))).statusCode, 400);

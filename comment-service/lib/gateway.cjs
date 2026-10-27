@@ -118,7 +118,11 @@ function readBody(event, headers, allowForm = false) {
 }
 
 function eventWithBody(event, body, headers) {
-  return { ...event, body: JSON.stringify(body), isBase64Encoded: false, headers: { ...headers, 'content-type': 'application/json' } };
+  const serialized = JSON.stringify(body);
+  const rewrittenHeaders = { ...headers, 'content-type': 'application/json', 'content-length': String(Buffer.byteLength(serialized, 'utf8')) };
+  // Netlify has already collected the body; the rewritten payload is not chunked.
+  delete rewrittenHeaders['transfer-encoding'];
+  return { ...event, body: serialized, isBase64Encoded: false, headers: rewrittenHeaders };
 }
 
 function contentError(content) {

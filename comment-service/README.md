@@ -63,7 +63,7 @@ Netlify Functions 使用 AWS Lambda Node.js 运行时。Lambda 默认关闭 `req
 
 初始化秘密不进 URL。服务会签发仅该站可用、15 分钟过期的 HttpOnly/Secure/SameSite=Strict cookie。公开 `/api/user` 注册接口一直关闭；只有持有该 cookie 且用户表为空的请求才可创建第一个账号。数据库事务锁防止两个并发请求同时抢占管理员。已有任何账号时，后续注册全部拒绝。
 
-创建后，正常登录管理后台确认可以管理评论，再删除 Netlify 的 `BOOTSTRAP_TOKEN` 并重新部署。不要删除 `JWT_TOKEN`。日常后台地址为 `https://项目名.netlify.app/.netlify/functions/comment/ui`，可以在手机或其他电脑使用；不依赖这台电脑开机。未登录时，后台会通过登录页的 `redirect=/ui` 等已验证站内路径返回原页面；外部跳转及 URL 中的 `token`、`state`、`code` 登录参数仍被拒绝。日常请直接打开上述后台地址。
+创建后，正常登录管理后台确认可以管理评论，再清空 Netlify 中 `BOOTSTRAP_TOKEN` 的 Production 值并重新部署。不要删除或清空 `JWT_TOKEN`。日常后台地址为 `https://项目名.netlify.app/.netlify/functions/comment/ui`，可以在手机或其他电脑使用；不依赖这台电脑开机。未登录时，后台会通过登录页的 `redirect=/ui` 等已验证站内路径返回原页面；外部跳转及 URL 中的 `token`、`state`、`code` 登录参数仍被拒绝。日常请直接打开上述后台地址。
 
 管理员可查看、编辑、删除、审核评论。所有通过题目评论框和回复框提交的新内容都显示匿名；后台管理权限仍由登录凭据核实。访客不能自选“管理员”昵称或发送身份字段。无登录匿名访客没有永久身份，因此不提供自行删除跨设备评论；有删除需求可向作者说明题号和评论内容。
 
@@ -74,7 +74,7 @@ Netlify Functions 使用 AWS Lambda Node.js 运行时。Lambda 默认关闭 `req
 - 管理员登录成功，空评论列表可打开。
 - 题库测试配置中填写服务 URL；在两种浏览器对同一题测试：一个匿名发言，另一个能看到；不同题互不混合，回复保持同题。
 - 60 秒内再次发言返回限频提示；刷新后首次评论仍存在。管理后台删除后，另一浏览器刷新应不再显示。
-- 验证已有管理员后不能再注册；移除 BOOTSTRAP_TOKEN 后旧初始化 cookie 也失效。
+- 验证已有管理员后不能再注册；清空 BOOTSTRAP_TOKEN 的 Production 值并重新部署后，旧初始化 cookie 也失效。
 - 最后启用生产题库的公开评论开关。
 
 题库构建会自动刷新 `question-ids.json`；每次增加题目后，需让 Netlify 从同一最新提交重新部署，否则新增题号暂不能评论。线程固定为 `/actuary-study/questions/{题号}.html`，练习进度、URL 查询参数、设备和昵称不参与线程标识。
