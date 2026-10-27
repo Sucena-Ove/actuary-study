@@ -1,0 +1,13 @@
+{
+  "package": "@waline/client",
+  "version": "3.16.1",
+  "license": "MIT",
+  "source": "https://registry.npmjs.org/@waline/client/-/client-3.16.1.tgz",
+  "integrity": "sha512-3zrFOl1kK0ITz8npaB7HFecx6PS6qpTNfF9qdNx49pffGxQ4luIX06MaPBn6LgbnhCTTWHCHa0v3wHn5j7BwDw==",
+  "originalJavaScriptSHA256": "4b007b2a4ffd4c1d40e17c7f781e52557ddc709d68aff00218c92067dd1fe462",
+  "patchedJavaScriptSHA256": "37ef679ffe38ae64847aec0409b6706a6cc2079c9f965437d08f8d3fc78964bc",
+  "patches": [
+    "Namespaced bundled WALINE_* browser storage keys as ACTUARY_WALINE_* to avoid affecting other sites on the same origin.",
+    "Use sessionStorage for ACTUARY_WALINE_COMMENT_BOX_EDITOR to isolate browser tabs; comments.js owns per-question drafts."
+  ]
+}

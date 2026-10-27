@@ -116,7 +116,10 @@ source_rows=''.join('<li><strong>'+esc(s['title'])+'</strong>：'+esc(s.get('des
 about=f'<div class="page-head">{breadcrumb("关于与来源")}<h1>关于这本学习题库</h1><p>把考试复盘、教材知识点和日常练习整理成一处可以查阅的地方。</p></div><article class="article-body"><h2>题库说明</h2><p>当前收录 {len(questions)} 题，包含题干、四个选项、答案、分步解析、易错提醒与知识点标签。考试回忆题的缺失条件与数值由编者补全，不能视为官方原题。原创同型题不代表教材原书或 SOA 原题。</p><p>{esc(bank["conventions"])}</p><h2>公开学习与本机进度</h2><p>题目目录只展示题号和知识点，题干与解析统一在刷题区展示；学习笔记继续公开。网页不需要注册，也不提供账号后台。刷题进度、错题和收藏保存在当前浏览器本机；网站不会自动上传学习记录。浏览器清理数据、更换设备或使用无痕窗口时，记录可能丢失，请在刷题区“我的”中导出备份。</p><p>手机 App 与此网站不会自动互通账号。兼容的本地学习进度可以通过导出、导入手动转移；账号同步需要另行部署服务。</p><h2>资料与出处</h2><ul>{source_rows}</ul><h2>阅读与纠错</h2><p>来源说明用于辨别题目出处和改写范围。请以题干明确写出的条件为准，注意参数化、独立性与支持集。发现疑问时，可记录题号与推导进行复核。</p><p class="note">本网站与中国精算师协会、SOA、相关院校或出版社无隶属关系。主科目与拓展标签用于学习安排，不构成官方考试范围承诺。</p></article>'
 contact='<section id="contact"><h2>联系作者与题目反馈</h2><p>这是一个边学习、边整理的概率统计学习站。如果发现题目条件有歧义、答案有疑问，或想交流一种更直观的解法，欢迎带上题号和推导到 B 站主页私信。</p><p><strong>B站 UID：247892366</strong></p><p><a class="button primary" href="https://space.bilibili.com/247892366" rel="noopener noreferrer">前往作者 B 站主页 ↗</a></p></section>'
 about=about.replace('</article>','<h2>每日抽题与自由练习</h2><p>每天按北京时间掷一次 120 面骰子，系统随机抽出对应数量的不同题目。未解锁时当天只能练这一组，刷新不会重新抽取；可以回顾本组，次日重新抽取。题库包含回忆改编题与原创进阶题，所有难度都可能被抽到；具体出处和补全条件见每题说明。</p><p>输入有效密钥后，可解除每日题数和选题限制。密钥会保存在当前浏览器的独立记录中，下次打开时自动验证并恢复自由练习；不会写入网址或学习进度导出文件。共享电脑使用完可点击“清除本机解锁”。清理网站数据、无痕模式或更换浏览器后需要重新输入。</p><p>本网站没有服务器身份验证。每日限制和解锁状态在本机执行，清理或修改本机数据可以绕过；公开题库文件仍可被下载，不能提供严格的反爬或付费访问控制。50 个密钥可重复使用，不绑定账号。</p>'+contact+'</article>')
-page('about.html','关于、联系方式与资料来源','精算随身练题库来源说明、B站联系方式、本机学习记录与静态网站使用方式。',about)
+about=about.replace('网页不需要注册，也不提供账号后台。','刷题不需要注册，不提供学习账号同步。')
+about=about.replace('本网站没有服务器身份验证。','题库解锁没有服务器身份验证。')
+about=about.replace('</article>','<h2 id="comments-privacy">匿名评论与隐私</h2><p>题目讨论开启后，无需注册或填写昵称、邮箱即可留言。发布的内容、时间和回复关系会保存在云端，并向所有查看本题的访客公开。请勿在评论中填写电话、证件、密码或其他个人信息。</p><p>评论服务由 Netlify 托管，数据存储于 Neon。服务会处理 IP 地址，用于限制频繁发送和管理垃圾评论；IP 不向其他访客展示，管理员可在后台管理留言。匿名表示无需学习账号，不表示网络请求完全不留下记录。</p><p>评论草稿只暂存在当前浏览器标签页。刷题进度、错题、收藏和解锁密钥仍保存在本机，不随评论上传。需要处理留言或反馈问题，可联系本页所列作者并说明题号、留言内容及大致时间。</p></article>')
+page('about.html','关于、联系方式与资料来源','精算随身练题库来源说明、B站联系方式、本机学习记录与匿名评论说明。',about)
 
 shutil.copytree(HERE/'assets',out/'assets',dirs_exist_ok=True)
 practice=out/'practice';practice.mkdir(exist_ok=True)
@@ -124,6 +127,12 @@ shutil.copytree(source_dir/'math',practice/'math',dirs_exist_ok=True)
 for name in ['bank.json','math-map.json','style.css']:shutil.copy2(source_dir/name,practice/name)
 for name in ['vault.js','vault.json']:
     if (source_dir/name).is_file():shutil.copy2(source_dir/name,practice/name)
+for name in ['comments-config.js','comments.js','comments.css']:
+    if (source_dir/name).is_file():shutil.copy2(source_dir/name,practice/name)
+if (source_dir/'vendor'/'waline').is_dir():
+    shutil.copytree(source_dir/'vendor'/'waline',practice/'vendor'/'waline',dirs_exist_ok=True)
+if (HERE/'comment-service').is_dir():
+    (HERE/'comment-service'/'question-ids.json').write_text(json.dumps([q['id'] for q in questions],separators=(',',':'))+'\n',encoding='utf-8')
 if (source_dir/'games').is_dir():
     shutil.copytree(source_dir/'games',out/'games',dirs_exist_ok=True)
     pages.extend(site_url+p for p in ['games/index.html','games/wild-lasso/index.html'])
@@ -144,9 +153,14 @@ js=js.replace(hook,replacement)
 write('practice/app.js',js)
 write('practice/index.html',f'''<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#205d49"><meta name="description" content="精算随身练在线刷题：{len(questions)}道概率统计题，确认答案后显示分步解析，错题和进度保存在本机。"><meta name="robots" content="index,follow"><link rel="canonical" href="{esc(site_url)}practice/index.html"><title>在线刷题 · 精算随身练</title><link rel="icon" href="../assets/favicon.svg"><link rel="stylesheet" href="style.css"></head><body><header><a href="../index.html" class="brand" style="text-decoration:none;color:inherit"><span class="logo">Σ</span><div>精算随身练<small>← 返回学习站</small></div></a><span class="offline">本机保存 · 无需账号</span></header><main id="app"><div class="loading"><span class="logo">Σ</span><h2>准备好，练一题。</h2><p>正在读取题库…</p><noscript>刷题区需要 JavaScript。每日随机抽题与密钥解锁都在当前浏览器中进行。</noscript></div></main><nav id="nav"><button data-action="home">练习</button><button data-action="topics">专题</button><button data-action="wrong">错题</button><button data-action="mine">我的</button></nav><div id="toast" role="status"></div><script src="app.js"></script></body></html>''')
 practice_html=(practice/'index.html').read_text(encoding='utf-8')
+practice_html=practice_html.replace('本机保存 · 无需账号','练习记录保存在本机')
 practice_html=practice_html.replace('<script src="app.js"></script>','<script src="vault.js"></script><script src="app.js"></script>')
+if all((source_dir/name).is_file() for name in ['comments-config.js','comments.js','comments.css']):
+    practice_html=practice_html.replace('<link rel="stylesheet" href="style.css">','<link rel="stylesheet" href="style.css"><link rel="stylesheet" href="vendor/waline/waline.css"><link rel="stylesheet" href="comments.css">')
+    practice_html=practice_html.replace('<script src="app.js"></script>','<script src="comments-config.js"></script><script src="comments.js"></script><script src="app.js"></script>')
+    practice_html=practice_html.replace('</main><nav','</main><section id="question-comments" aria-label="本题匿名讨论" hidden></section><nav')
 practice_footer='<footer style="max-width:760px;margin:auto;padding:0 20px 100px;font-size:12px;color:#68766c"><a href="../about.html#contact">联系作者 / 题目反馈</a> · <a href="https://space.bilibili.com/247892366" rel="noopener noreferrer">B站 UID 247892366 ↗</a></footer>'
-write('practice/index.html',practice_html.replace('</main><nav','</main>'+practice_footer+'<nav'))
+write('practice/index.html',practice_html.replace('<nav id="nav">',practice_footer+'<nav id="nav">'))
 pages.append(site_url+'practice/index.html')
 write('.nojekyll','')
 lastmod=bank.get('revisionDate',bank.get('date',datetime.date.today().isoformat()))

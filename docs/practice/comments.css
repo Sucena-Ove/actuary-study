@@ -1,0 +1,32 @@
+/* Scoped to the stable host outside the study application's redraw area. */
+#question-comments[hidden],.question-comments [hidden]{display:none!important}
+#question-comments{max-width:760px;margin:0 auto;padding:0 18px 110px}
+.question-comments{--waline-theme-color:#176b54;--waline-active-color:#12533f;--waline-text-color:#213830;--waline-bg-color:#fff;--waline-bg-color-light:#f4f6f1;--waline-bg-color-hover:#edf3e7;--waline-border-color:#dde5dc;--waline-disable-bg-color:#edf0eb;--waline-disable-color:#75837b;--waline-info-bg-color:#edf3e7;--waline-info-color:#75837b;--waline-font-size:14px;--waline-border:1px solid #dde5dc;--waline-border-radius:12px;background:#fff;border:1px solid var(--line,#dde5dc);border-radius:18px;overflow:hidden}
+.question-comments-details{margin:0}
+.question-comments-summary{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:19px 20px;list-style:none;min-height:64px;cursor:pointer;color:var(--green,#176b54)}
+.question-comments-summary::-webkit-details-marker{display:none}
+.question-comments-summary:focus-visible{outline:3px solid var(--gold,#b98935);outline-offset:-4px;border-radius:16px}
+.question-comments-title{font-size:15px;font-weight:700}
+.question-comments-toggle{font-size:11px;color:var(--muted,#75837b);flex-shrink:0}
+.question-comments-body{padding:0 20px 18px;border-top:1px solid var(--line,#dde5dc)}
+.question-comments-intro{font-size:12px;color:#5f7167;margin:15px 0}
+.question-comments-privacy{color:var(--green,#176b54);text-decoration:underline;text-underline-offset:3px}
+.question-comments-status{font-size:13px;color:var(--muted,#75837b);margin:16px 0}
+.question-comments-retry{font-size:13px;min-height:40px;margin-bottom:12px}
+.question-comments-draft-note{font-size:11px;line-height:1.7;color:var(--muted,#75837b);margin:14px 0 0}
+.question-comments-widget{min-width:0;overflow-wrap:anywhere}
+.question-comments .wl-editor{font-size:15px;line-height:1.75;min-height:120px;color:var(--ink,#213830)}
+.question-comments .wl-panel{margin-bottom:20px}
+.question-comments .wl-btn{min-height:38px;border-radius:9px;font-size:13px}
+.question-comments .wl-actions .wl-action{min-width:32px;min-height:32px;border-radius:7px;padding:5px}
+.question-comments .wl-footer{gap:8px;flex-wrap:wrap}
+.question-comments .wl-info{gap:8px;flex-wrap:wrap}
+.question-comments .wl-content{font-size:14px;line-height:1.85;overflow-wrap:anywhere}
+.question-comments .wl-content pre{white-space:pre-wrap;overflow-wrap:anywhere}
+.question-comments .wl-content img{max-width:100%;height:auto}
+.question-comments .wl-login-info,.question-comments .wl-login-nick,.question-comments .wl-logout-btn{display:none!important}
+/* The anonymous service supports discussion/replies, not comment-like writes. */
+.question-comments .wl-like{display:none!important}
+.question-comments .wl-power{margin-top:16px;font-size:10px}
+@media(max-width:480px){.question-comments-summary{padding:16px}.question-comments-title{font-size:14px}.question-comments-toggle{font-size:10px}.question-comments-body{padding:0 14px 15px}.question-comments .wl-cards .wl-cards{margin-left:12px}.question-comments .wl-card-item{padding:12px 0}}
+@media(max-width:350px){#question-comments{padding-left:12px;padding-right:12px}.question-comments-summary{gap:6px;padding:14px 12px}}

@@ -386,6 +386,36 @@ async function checkPublishedQueryRoute() {
   assert.equal(member.context.progress.session.ids[0], 10024, 'startup verifies saved key before routing a direct question link');
 }
 
+function checkCommentAccessIntegration() {
+  const h = harness(), c = h.context, mounted = [];
+  let unmounts = 0;
+  c.ActuaryComments = {
+    mount(host, details) { mounted.push(details.questionId); host.hidden = false; },
+    unmount() { unmounts++; }
+  };
+  c.accessState.unlocked = true;
+  c.start([1, 2], 'comment fixture', 'ordered', 'all');
+  assert.equal(mounted.length, 0, 'comments must not appear before an answer is checked');
+  c.choose(1); c.check(false);
+  assert.equal(mounted.at(-1), 1);
+  assert.equal(h.nodes.get('question-comments').hidden, false);
+  c.render();
+  assert.equal(mounted.at(-1), 1, 'same question must retain its stable thread identity');
+  c.progress.session.index = 1; c.render();
+  assert.equal(h.nodes.get('question-comments').hidden, true, 'next unanswered question cannot show previous discussion');
+  c.check(true);
+  assert.equal(mounted.at(-1), 2, 'skip/reveal also unlocks the current discussion');
+  c.setScreen('home');
+  assert.equal(h.nodes.get('question-comments').hidden, true);
+  c.screen = 'session'; c.accessState.unlocked = false; c.render();
+  assert.equal(h.nodes.get('question-comments').hidden, true, 'revoked question access must hide comments');
+  assert(unmounts > 0);
+  c.ActuaryComments = { mount() { throw Error('comment service unavailable'); }, unmount() {} };
+  c.accessState.unlocked = true;
+  assert.doesNotThrow(() => c.render(), 'comment failure must not block practice');
+  assert.equal(h.nodes.get('question-comments').hidden, true);
+}
+
 async function main() {
   checkDailyDrawAndPersistence();
   checkRollBoundariesAndMigration();
@@ -394,6 +424,7 @@ async function main() {
   await checkRememberedCredential();
   await checkVerificationIsRequired();
   checkImportAllowlist();
+  checkCommentAccessIntegration();
   await checkPublishedQueryRoute();
   console.log('PASS: fixed daily pool, roll bounds/migration/day rollover, guest route guards, unknown-answer quota, preserved progress, remembered-key verification, key-free backups and generated query routes.');
 }
