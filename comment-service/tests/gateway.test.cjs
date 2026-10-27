@@ -118,11 +118,16 @@ test('rate limiting fails closed and returns Retry-After', async () => {
 
 test('reply must exist, be approved, and belong to this question', async () => {
   const checked = [];
-  const { gateway, forwarded } = fixture({ approvedParent: async (id, url) => { checked.push([id, url]); return id === '11' ? { id: 11, rid: 7 } : null; } });
+  const { gateway, forwarded } = fixture({ approvedParent: async (id, url) => { checked.push([id, url]); return id === 11 ? { id: 11, rid: 7 } : null; } });
   assert.equal((await gateway(event('/api/comment', 'POST', { url: path, comment: 'x', pid: '12' }))).statusCode, 400);
   assert.equal((await gateway(event('/api/comment', 'POST', { url: path, comment: 'x', rid: '7' }))).statusCode, 400);
+  for (const pid of ['2147483648', 2147483648, -1, 1.2, {}, [11], '01']) {
+    assert.equal((await gateway(event('/api/comment', 'POST', { url: path, comment: 'x', pid }))).statusCode, 400);
+  }
   assert.equal((await gateway(event('/api/comment', 'POST', { url: path, comment: 'x', pid: '11', rid: '999' }))).statusCode, 200);
-  assert.deepEqual(checked[1], ['11', path]); assert.equal(JSON.parse(forwarded[0].body).rid, '7');
+  assert.deepEqual(checked[1], [11, path]);
+  assert.equal(JSON.parse(forwarded[0].body).pid, 11);
+  assert.equal(JSON.parse(forwarded[0].body).rid, 7);
 });
 
 test('no public registration, including valid-looking email/password', async () => {

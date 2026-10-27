@@ -43,7 +43,14 @@ function matches(row, where = {}) {
 const model = (name) => ({
   select: async (where = {}, options = {}) => rows[name].filter((row) => matches(row, where)).slice(options.offset || 0, options.limit ? (options.offset || 0) + options.limit : undefined).map((row) => ({ ...row })),
   count: async (where = {}) => rows[name].filter((row) => matches(row, where)).length,
-  add: async (data) => { const row = { ...data, objectId: String(rows[name].length + 1) }; rows[name].push(row); return { ...row }; },
+  add: async (data) => {
+    const row = { ...data, objectId: rows[name].length + 1 };
+    // PostgreSQL persists integer IDs, while Waline's add response preserves input fields.
+    const persisted = { ...row };
+    if (name === 'Comment') for (const key of ['pid', 'rid']) if (persisted[key] != null) persisted[key] = Number(persisted[key]);
+    rows[name].push(persisted);
+    return { ...row };
+  },
   update: async (data, where) => rows[name].filter((row) => matches(row, where)).map((row) => { Object.assign(row, data); return { ...row }; }),
   delete: async (where) => { rows[name] = rows[name].filter((row) => !matches(row, where)); },
 });
@@ -120,4 +127,26 @@ test('real administrator login works, ordinary visitors cannot moderate', async 
   const admin = await request('/api/comment', 'GET', undefined, { type: 'list', owner: 'all', status: 'approved', keyword: '', page: '1', lang: 'zh-CN' }, { origin: '', authorization: `Bearer ${login.data.token}` });
   assert.equal(admin.statusCode, 200, admin.body);
   assert.equal(JSON.parse(admin.body).errno, 0, admin.body);
+});
+
+test('reply POST IDs match the numeric PostgreSQL GET IDs used by the client', async () => {
+  const path = '/actuary-study/questions/587.html';
+  const rootId = rows.Comment[0].objectId;
+  const response = await request('/api/comment', 'POST', {
+    url: path, comment: '回复：补充推导步骤', pid: String(rootId), rid: '999',
+  }, {}, { 'x-nf-client-connection-ip': '192.0.2.15' });
+  assert.equal(response.statusCode, 200, response.body);
+  const reply = JSON.parse(response.body).data;
+  const listing = await request('/api/comment', 'GET', undefined, { path });
+  assert.equal(listing.statusCode, 200, listing.body);
+  const result = JSON.parse(listing.body).data;
+  const root = result.data.find(({ objectId }) => objectId === rootId);
+  assert.ok(root);
+  assert.equal(result.count, 2);
+  assert.equal(reply.pid, root.objectId);
+  assert.equal(reply.rid, root.objectId);
+  const persistedReply = root.children.find(({ objectId }) => objectId === reply.objectId);
+  assert.ok(persistedReply);
+  assert.equal(reply.pid, persistedReply.pid);
+  assert.equal(reply.rid, persistedReply.rid);
 });

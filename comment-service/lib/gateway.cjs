@@ -226,14 +226,15 @@ function createGateway({ config, waline, store, now = Date.now }) {
       const data = { comment: body.comment.trim(), url: body.url, nick: ANONYMOUS, mail: '', link: '', ua: '' };
       for (const key of ['pid', 'rid']) {
         if (body[key] !== undefined && body[key] !== null && body[key] !== '') {
-          if (!/^[1-9]\d{0,9}$/.test(String(body[key]))) return send(response(400, '回复编号无效。'));
-          data[key] = String(body[key]);
+          if (!['string', 'number'].includes(typeof body[key]) || !/^[1-9]\d{0,9}$/.test(String(body[key])) || Number(body[key]) > 2147483647) return send(response(400, '回复编号无效。'));
+          // The PostgreSQL schema uses int IDs; POST and GET must keep the same type.
+          data[key] = Number(body[key]);
         }
       }
       if (data.pid) {
         const parent = await store.approvedParent(data.pid, data.url);
         if (!parent) return send(response(400, '只能回复这道题已公开的评论。'));
-        data.rid = String(parent.rid || parent.id);
+        data.rid = Number(parent.rid || parent.id);
       } else if (data.rid) return send(response(400, '回复缺少父评论。'));
       for (const key of ['turnstile', 'recaptchaV3']) if (typeof body[key] === 'string') data[key] = body[key];
       const anonymousHeaders = { ...headers };
