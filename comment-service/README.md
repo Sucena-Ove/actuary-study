@@ -41,6 +41,7 @@ Netlify 应检测本目录的 `netlify.toml` 和 `package-lock.json`。安装禁
 | 字段 | 内容 |
 | --- | --- |
 | `SERVER_URL` | `https://项目名.netlify.app/.netlify/functions/comment`，末尾不要额外路径；普通配置，不标 Secret |
+| `NODE_OPTIONS` | 必填 `--experimental-require-module`；普通配置，不标 Secret，必须作用于 Production Functions（免费方案可选全部作用域） |
 | `SITE_URL` | 可不填；默认 `https://sucena-ove.github.io/actuary-study/`。若填写，使用普通配置，不标 Secret |
 | `PG_HOST` | Neon 的 pooled hostname，不含 `https://` |
 | `PG_PORT` | 可不填；默认 `5432`。若填写，使用普通配置，不标 Secret |
@@ -53,6 +54,8 @@ Netlify 应检测本目录的 `netlify.toml` 和 `package-lock.json`。安装禁
 | `COMMENT_AUDIT` | `false` 立即显示；希望先审核则设 `true` |
 
 随机秘密可用密码管理器生成。不要使用这里的字段名或测试文件中的测试字符串作为真正密码。环境变量改完需要重新部署。
+
+Netlify Functions 使用 AWS Lambda Node.js 运行时。Lambda 默认关闭 `require()` 加载 ES Module，而当前 Waline 的依赖需要该能力，因此仅设置 Node 24 还不够，必须配置上述 `NODE_OPTIONS`。缺少它会在 `waline-init` 阶段出现 `ERR_REQUIRE_ESM` 并返回 503；这是运行时兼容设置，不是数据库密码错误。参见 [AWS 官方 Node.js 运行时说明](https://docs.aws.amazon.com/lambda/latest/dg/lambda-nodejs.html)。
 
 ### 3. 由你本人创建唯一管理员
 
@@ -92,6 +95,7 @@ Netlify 应检测本目录的 `netlify.toml` 和 `package-lock.json`。安装禁
 npm ci --ignore-scripts
 npm run build
 npm test
+node --experimental-require-module --test tests/handler.test.cjs
 ```
 
 测试覆盖匿名身份、注册门禁、签名 cookie/过期、Origin、多值头和 query 别名、题号、跨题回复、长度、限频、管理员读写边界，以及真实 Waline HTTP handler 的注册、密码哈希、登录和脚本净化。测试数据库是隔离的内存替身，不是 Neon；数据库连接、SQL 执行与公网跨设备共享必须按上面的联调步骤单独验收。

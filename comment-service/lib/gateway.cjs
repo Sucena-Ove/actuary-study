@@ -83,13 +83,15 @@ function response(statusCode, message, extra = {}) {
   return { statusCode, headers: { 'content-type': 'application/json; charset=utf-8', ...extra }, body: JSON.stringify({ errno: statusCode, errmsg: message }) };
 }
 
-function finish(result, origin, config) {
+function finish(result, origin, config, isSetupPage = false) {
   if (result.statusCode >= 500) result = response(503, '评论服务暂时不可用，请稍后再试。');
   const headers = Object.fromEntries(Object.entries(result.headers || {}).filter(([key]) => !key.toLowerCase().startsWith('access-control-')));
   Object.assign(headers, {
     'cache-control': 'no-store',
     'x-content-type-options': 'nosniff',
-    'referrer-policy': 'no-referrer',
+    // A native same-origin HTML form needs its Origin preserved. Only our
+    // script-free setup document opts in; APIs and the dashboard stay private.
+    'referrer-policy': isSetupPage && headers['referrer-policy'] === 'same-origin' ? 'same-origin' : 'no-referrer',
     'x-frame-options': 'DENY',
     vary: 'Origin',
   });
@@ -130,6 +132,7 @@ function setupPage() {
   // No third-party scripts, no token in URLs or HTML. The owner types the secret.
   return { statusCode: 200, headers: {
     'content-type': 'text/html; charset=utf-8',
+    'referrer-policy': 'same-origin',
     'content-security-policy': "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",
   }, body: `<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>评论管理员初始化</title><style>body{max-width:36rem;margin:4rem auto;padding:0 1rem;font:18px/1.7 system-ui}input,button{font:inherit;padding:.6rem;max-width:100%;box-sizing:border-box}input{width:100%}button{margin-top:1rem}</style><h1>评论管理员初始化</h1><p>仅网站所有者使用。输入你在 Netlify 设置的 BOOTSTRAP_TOKEN，验证后在 Waline 页面自行设置管理员邮箱与密码。</p><form method="post" action="${FUNCTION_PREFIX}/setup/session"><label>初始化密钥<input type="password" name="token" autocomplete="off" required minlength="32" maxlength="256"></label><button type="submit">验证并创建管理员</button></form><p>已有管理员时无法再次注册。日常管理请打开 <a href="${FUNCTION_PREFIX}/ui">管理后台</a>。</p></html>` };
 }
@@ -150,7 +153,7 @@ function createGateway({ config, waline, store, now = Date.now }) {
     // check still expects one; only reads receive this internal default.
     if (method === 'GET' && !origin) originalEvent.headers.origin = config.serverOrigin;
     const route = routeOf(originalEvent);
-    const send = (res) => finish(res, origin, config);
+    const send = (res, isSetupPage = false) => finish(res, origin, config, isSetupPage);
     if (!route) return send(response(404, 'Not found'));
     if (origin && !config.allowedOrigins.has(origin)) return send(response(403, '来源不允许。'));
     if (method === 'OPTIONS') {
@@ -158,7 +161,7 @@ function createGateway({ config, waline, store, now = Date.now }) {
       return send({ statusCode: 204, body: '', headers: {} });
     }
     if (method === 'GET' && route === '/health') return send({ statusCode: 200, headers: {}, body: JSON.stringify({ ok: true, service: 'question-comments' }) });
-    if (route === '/setup' && method === 'GET') return send(setupPage());
+    if (route === '/setup' && method === 'GET') return send(setupPage(), true);
     if (route === '/setup/session') {
       if (method !== 'POST' || origin !== config.serverOrigin) return send(response(403, '请在评论服务自己的初始化页面操作。'));
       let body;

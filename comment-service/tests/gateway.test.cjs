@@ -158,6 +158,26 @@ test('setup requires correct secret and same-origin form POST, never URL token',
   assert.equal(good.headers.location.includes(env.BOOTSTRAP_TOKEN), false);
 });
 
+test('native setup form preserves same-origin metadata without permitting null Origin', async () => {
+  const { gateway } = fixture();
+  const page = await gateway(event('/setup', 'GET'));
+  assert.equal(page.headers['referrer-policy'], 'same-origin');
+  assert.match(page.headers['content-security-policy'], /form-action 'self'/);
+  assert.match(page.body, /method="post" action="\/.netlify\/functions\/comment\/setup\/session"/);
+  const form = event('/setup/session', 'POST', undefined, {
+    headers: { origin: config.serverOrigin, 'content-type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ token: env.BOOTSTRAP_TOKEN }).toString(),
+  });
+  const accepted = await gateway(form);
+  assert.equal(accepted.statusCode, 303);
+  assert.match(accepted.headers['set-cookie'], /HttpOnly; Secure; SameSite=Strict/);
+  assert.equal(accepted.headers['referrer-policy'], 'no-referrer');
+  form.headers.origin = 'null';
+  assert.equal((await gateway(form)).statusCode, 403);
+  assert.equal((await gateway(event('/health'))).headers['referrer-policy'], 'no-referrer');
+  assert.equal((await gateway(event('/ui'))).headers['referrer-policy'], 'no-referrer');
+});
+
 test('bootstrap and setup are closed after any user exists', async () => {
   const { gateway, forwarded } = fixture({ emptyUsers: async () => false, withFirstUser: async () => null });
   const headers = { origin: config.serverOrigin, 'content-type': 'application/json', cookie: `${COOKIE_NAME}=${makeSetupCookie(env.BOOTSTRAP_TOKEN)}` };
