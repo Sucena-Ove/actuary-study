@@ -159,6 +159,12 @@ if all((source_dir/name).is_file() for name in ['comments-config.js','comments.j
     practice_html=practice_html.replace('<link rel="stylesheet" href="style.css">','<link rel="stylesheet" href="style.css"><link rel="stylesheet" href="vendor/waline/waline.css"><link rel="stylesheet" href="comments.css">')
     practice_html=practice_html.replace('<script src="app.js"></script>','<script src="comments-config.js"></script><script src="comments.js"></script><script src="app.js"></script>')
     practice_html=practice_html.replace('</main><nav','</main><section id="question-comments" aria-label="本题匿名讨论" hidden></section><nav')
+# A changed public configuration must not reuse an older cached script.
+for asset_name in ['style.css', 'vault.js', 'comments-config.js', 'comments.js', 'comments.css', 'app.js', 'vendor/waline/waline.css']:
+    asset_path=practice/asset_name
+    if asset_path.is_file():
+        asset_revision=hashlib.sha256(asset_path.read_bytes()).hexdigest()[:12]
+        practice_html=practice_html.replace(f'="{asset_name}"',f'="{asset_name}?v={asset_revision}"')
 practice_footer='<footer style="max-width:760px;margin:auto;padding:0 20px 100px;font-size:12px;color:#68766c"><a href="../about.html#contact">联系作者 / 题目反馈</a> · <a href="https://space.bilibili.com/247892366" rel="noopener noreferrer">B站 UID 247892366 ↗</a></footer>'
 write('practice/index.html',practice_html.replace('<nav id="nav">',practice_footer+'<nav id="nav">'))
 pages.append(site_url+'practice/index.html')

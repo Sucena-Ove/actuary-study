@@ -113,4 +113,6 @@ node --experimental-require-module --test tests/handler.test.cjs
 - [Waline 服务端配置与 hooks](https://waline.js.org/en/reference/server/config.html)
 - [Waline 环境变量](https://waline.js.org/en/reference/server/env.html)
 
-上游 npm package.json 的 license 字段标 MIT，但该版本包内 LICENSE 和仓库 LICENSE 是 GPL-2.0。这里保留实际 `LICENSE.waline` 全文，不把上游代码或 SQL 重标为 MIT；本目录源码按 GPL-2.0-only 提供。管理员脚本从锁定 npm 包在 build 时复制，来源与许可证一并保留。
+上游 npm package.json 的 license 字段标 MIT，但该版本包内 LICENSE 和仓库 LICENSE 是 GPL-2.0。这里保留实际 `LICENSE.waline` 全文，不把上游代码或 SQL 重标为 MIT；本目录源码按 GPL-2.0-only 提供。管理员脚本从锁定 npm 包在 build 时生成，来源与许可证一并保留。
+
+2026-10-27 本地管理员脚本补丁：`scripts/build.cjs` 对 `@waline/admin 0.36.0` 的题目链接拼接函数作一处精确替换。仅 `/actuary-study/questions/{正整数题号}.html` 使用标准 URL 解析，避免 `SITE_URL` 与线程路径重复拼入项目目录；其他路径保留上游行为。题目线程、数据库内容及来源校验不变。原片段必须恰好出现一次，否则构建停止；`tests/admin-link.test.cjs` 覆盖普通题、难题链接及补丁匹配失败情形。升级管理员包时需重新检查补丁。
