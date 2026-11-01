@@ -119,7 +119,7 @@ about=about.replace('</article>','<h2>每日抽题与自由练习</h2><p>每天�
 about=about.replace('网页不需要注册，也不提供账号后台。','刷题不需要注册，不提供学习账号同步。')
 about=about.replace('本网站没有服务器身份验证。','题库解锁没有服务器身份验证。')
 about=about.replace('</article>','<h2 id="comments-privacy">匿名评论与隐私</h2><p>题目讨论开启后，无需注册或填写昵称、邮箱即可留言。发布的内容、时间和回复关系会保存在云端，并向所有查看本题的访客公开。请勿在评论中填写电话、证件、密码或其他个人信息。</p><p>评论服务由 Netlify 托管，数据存储于 Neon。服务会处理 IP 地址，用于限制频繁发送和管理垃圾评论；IP 不向其他访客展示，管理员可在后台管理留言。匿名表示无需学习账号，不表示网络请求完全不留下记录。</p><p>评论草稿只暂存在当前浏览器标签页。刷题进度、错题、收藏和解锁密钥仍保存在本机，不随评论上传。需要处理留言或反馈问题，可联系本页所列作者并说明题号、留言内容及大致时间。</p></article>')
-about=about.replace('</article>','<h2 id="votes-privacy">题目评价与榜单</h2><p>每道题的“有价值”和“无价值”票数向所有访客公开。无需登录，核对答案后即可评价；同一浏览器每题保留一个选择，可以改投或撤销。票数由云端保存，其他人打开同一题也能看到。</p><p>浏览器会保存一个随机投票标识。服务端保存其不可直接还原的校验值、题号、投票方向和更新时间，并通过网络来源限制频繁操作。清除浏览器数据或更换浏览器会失去原来的投票身份；匿名投票不能保证每个自然人只投一次。</p><p>点赞榜和点踩榜需要有效密钥解锁。榜单请求使用仅在成功解锁后生成的专用凭证，服务端验证后返回榜单；原始密钥、作答和错题记录不会随投票或榜单请求上传。清除本机解锁后，网页会隐藏榜单并清除内存中的榜单凭证。凭证不能代替管理员登录。</p><p>榜单权限保护本站提供的榜单功能。由于单题票数公开，访客仍可能自行汇总公开票数；这不属于秘密数据保护。</p></article>')
+about=about.replace('</article>','<h2 id="votes-privacy">题目评价与榜单</h2><p>每道题的“有价值”和“无价值”票数向所有访客公开。无需登录，核对答案后即可评价；同一浏览器每题保留一个选择，可以改投或撤销。票数由云端保存，其他人打开同一题也能看到。</p><p>浏览器会保存一个随机投票标识。服务端保存其不可直接还原的校验值、题号、投票方向和更新时间，并通过网络来源限制频繁操作。清除浏览器数据或更换浏览器会失去原来的投票身份；匿名投票不能保证每个自然人只投一次。</p><p>完整题目目录及好评、差评排序需要有效密钥解锁；支持按模块和专题筛选，未获评价的题目也会列出。榜单请求使用仅在成功解锁后生成的专用凭证，服务端验证后返回榜单；原始密钥、作答和错题记录不会随投票或榜单请求上传。清除本机解锁后，网页会隐藏榜单并清除内存中的榜单凭证。凭证不能代替管理员登录。</p><p>榜单权限保护本站提供的榜单功能。由于单题票数公开，访客仍可能自行汇总公开票数；这不属于秘密数据保护。</p></article>')
 page('about.html','关于、联系方式与资料来源','精算随身练题库来源说明、B站联系方式、本机学习记录与匿名互动说明。',about)
 
 shutil.copytree(HERE/'assets',out/'assets',dirs_exist_ok=True)
@@ -128,7 +128,7 @@ shutil.copytree(source_dir/'math',practice/'math',dirs_exist_ok=True)
 for name in ['bank.json','math-map.json','style.css']:shutil.copy2(source_dir/name,practice/name)
 for name in ['vault.js','vault.json']:
     if (source_dir/name).is_file():shutil.copy2(source_dir/name,practice/name)
-for name in ['comments-config.js','comments.js','comments.css','question-votes.js','question-votes.css']:
+for name in ['comments-config.js','comments.js','comments.css','question-votes.js','question-votes.css','question-catalog.js','question-catalog.css']:
     if (source_dir/name).is_file():shutil.copy2(source_dir/name,practice/name)
 if (source_dir/'vendor'/'waline').is_dir():
     shutil.copytree(source_dir/'vendor'/'waline',practice/'vendor'/'waline',dirs_exist_ok=True)
@@ -148,7 +148,7 @@ replacements={
 }
 for old,new in replacements.items():js=js.replace(old,new)
 hook="render();if(window.initializeCloud)initializeCloud()"
-replacement="render();var qp=new URLSearchParams(location.search),qid=Number(qp.get('question'));if(qp.has('question')&&byId.has(qid)){start([qid],'单题练习','ordered','all')}else if(qp.get('tag')&&hasFullAccess()){progress.preferences=blank().preferences;progress.preferences.tag=qp.get('tag');persist();home();document.getElementById('filter-panel').scrollIntoView()}"
+replacement="render();var qp=new URLSearchParams(location.search),qid=Number(qp.get('question'));if(qp.has('question')&&byId.has(qid)){start([qid],'单题练习','ordered','all')}else if(qp.get('tag')&&hasFullAccess()){if(questionRankProof()){openQuestionCatalog({module:'',tag:qp.get('tag')})}else{progress.preferences=blank().preferences;progress.preferences.tag=qp.get('tag');persist();home();document.getElementById('filter-panel').scrollIntoView()}}"
 if hook not in js:raise RuntimeError('App startup hook changed; review static practice integration')
 js=js.replace(hook,replacement)
 write('practice/app.js',js)
@@ -164,8 +164,11 @@ if all((source_dir/name).is_file() for name in ['question-votes.js','question-vo
     practice_html=practice_html.replace('<link rel="stylesheet" href="style.css">','<link rel="stylesheet" href="style.css"><link rel="stylesheet" href="question-votes.css">')
     practice_html=practice_html.replace('<script src="app.js"></script>','<script src="question-votes.js"></script><script src="app.js"></script>')
     practice_html=practice_html.replace('</main>','</main><section id="question-votes" aria-label="本题评价" hidden></section>')
+if all((source_dir/name).is_file() for name in ['question-catalog.js','question-catalog.css']):
+    practice_html=practice_html.replace('<link rel="stylesheet" href="style.css">','<link rel="stylesheet" href="style.css"><link rel="stylesheet" href="question-catalog.css">')
+    practice_html=practice_html.replace('<script src="app.js"></script>','<script src="question-catalog.js"></script><script src="app.js"></script>')
 # A changed public configuration must not reuse an older cached script.
-for asset_name in ['style.css', 'vault.js', 'comments-config.js', 'comments.js', 'comments.css', 'question-votes.js', 'question-votes.css', 'app.js', 'vendor/waline/waline.css']:
+for asset_name in ['style.css', 'vault.js', 'comments-config.js', 'comments.js', 'comments.css', 'question-votes.js', 'question-votes.css', 'question-catalog.js', 'question-catalog.css', 'app.js', 'vendor/waline/waline.css']:
     asset_path=practice/asset_name
     if asset_path.is_file():
         asset_revision=hashlib.sha256(asset_path.read_bytes()).hexdigest()[:12]

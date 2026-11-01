@@ -102,8 +102,9 @@ Netlify Functions 使用 AWS Lambda Node.js 运行时。Lambda 默认关闭 `req
 | `GET /api/question-vote?questionId=587` | 可选 `X-Study-Voter`，不传则 `myVote=0` | `{questionId, likes, dislikes, myVote}` |
 | `PUT /api/question-vote` | 必填 `X-Study-Voter`，JSON `{questionId:587,vote:1}`；`vote` 可为 `-1` 或 `0` | `{questionId, likes, dislikes, myVote}` |
 | `GET /api/question-rank?sort=likes&limit=20` | 必填 `X-Study-Access`；`sort` 可为 `likes`/`dislikes`，`limit` 为 1–100 | `{sort, limit, items:[{questionId,likes,dislikes}]}` |
+| `GET /api/question-catalog` | 必填同一个 `X-Study-Access`；不接受任何查询参数 | `{items:[{questionId,likes,dislikes}],total}` |
 
-接口成功返回 `{errno:0,data:...}`；错误返回 `{errno:HTTP状态码,errmsg:提示}`，均 `Cache-Control:no-store`。429 带 `Retry-After:1`。榜单只包含对应票数大于零且仍在题库清单里的题，票数降序、平票题号升序。只允许既有生产站点跨域；前端请求不携带管理员 cookie 或 Waline 令牌。URL、响应和应用日志不包含凭证或设备标识。
+接口成功返回 `{errno:0,data:...}`；错误返回 `{errno:HTTP状态码,errmsg:提示}`，均 `Cache-Control:no-store`。429 带 `Retry-After:1`。榜单只包含对应票数大于零且仍在题库清单里的题，票数降序、平票题号升序。目录包含当前题号清单的全部题目（目前 611 道），数值题号升序，未投票题赞踩均为 0；一次聚合读取后按清单补齐，不逐题查询数据库。目录与榜单使用相同凭证门禁：无凭证或假凭证返回 403；目录只允许 GET（其他方法 405），有效凭证附带任何查询参数则返回 400。目录不包含设备标识、个人投票或题目答案，无新增数据库表。只允许既有生产站点跨域；前端请求不携带管理员 cookie 或 Waline 令牌。URL、响应和应用日志不包含凭证或设备标识。
 
 榜单要求真实解锁凭证，不信任前端的 unlocked 布尔值或公开 key-slot ID。前端解密原有题库的 32 字节内容密钥后，通过 `HKDF-SHA256(IKM=rawContentKey,salt=manifest.salt,info=UTF8(manifest.bankId+':question-rank-access:v1'),L=32)` 派生独立凭证，用小写 hex 放在 `X-Study-Access` 请求头。后端只持有 `study-access-verifiers.json` 中 `SHA256(UTF8(hexProof))` 的值，使用定长常量时间比较校验。该 JSON 是单向验证值，可随源码发布，不能拿它本身当凭证；禁止把原密钥、内容密钥或可用 proof 写入源码、构建日志或 URL。
 

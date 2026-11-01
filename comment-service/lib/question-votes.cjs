@@ -4,6 +4,7 @@ const crypto = require('node:crypto');
 
 const VOTE_ROUTE = '/api/question-vote';
 const RANK_ROUTE = '/api/question-rank';
+const CATALOG_ROUTE = '/api/question-catalog';
 const HEX_32 = /^[a-f0-9]{64}$/;
 
 function validateVerifiers(manifest = { version: 1, sha256: [] }) {
@@ -29,6 +30,13 @@ const error = (status, message, headers) => result(status, { errno: status, errm
 function createVoteGateway({ config, store, readBody }) {
   return async function votes({ event, headers, method, route }) {
     const query = event.queryStringParameters || {};
+    if (route === CATALOG_ROUTE) {
+      if (method !== 'GET') return error(405, '此接口只支持读取。', { allow: 'GET' });
+      if (!authorized(headers['x-study-access'], config.studyAccessVerifiers)) return error(403, '请先用题库密钥解锁，再查看题目目录。');
+      if (Object.keys(query).length) return error(400, '题目目录不接受查询参数。');
+      const items = await store.questionCatalog([...config.questionIds]);
+      return result(200, { errno: 0, data: { items, total: items.length } });
+    }
     if (route === RANK_ROUTE) {
       if (method !== 'GET') return error(405, '此接口只支持读取。', { allow: 'GET' });
       // The static site's unlocked boolean and public slot IDs are not credentials.
@@ -70,4 +78,4 @@ function createVoteGateway({ config, store, readBody }) {
   };
 }
 
-module.exports = { createVoteGateway, validateVerifiers, authorized, VOTE_ROUTE, RANK_ROUTE };
+module.exports = { createVoteGateway, validateVerifiers, authorized, VOTE_ROUTE, RANK_ROUTE, CATALOG_ROUTE };

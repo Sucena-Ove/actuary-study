@@ -1,7 +1,7 @@
 'use strict';
 
 const crypto = require('node:crypto');
-const { createVoteGateway, validateVerifiers, VOTE_ROUTE, RANK_ROUTE } = require('./question-votes.cjs');
+const { createVoteGateway, validateVerifiers, VOTE_ROUTE, RANK_ROUTE, CATALOG_ROUTE } = require('./question-votes.cjs');
 
 const FUNCTION_PREFIX = '/.netlify/functions/comment';
 const COOKIE_NAME = '__Host-waline-setup';
@@ -169,7 +169,7 @@ function createGateway({ config, waline, store, now = Date.now }) {
       return send({ statusCode: 204, body: '', headers: {} });
     }
     if (method === 'GET' && route === '/health') return send({ statusCode: 200, headers: {}, body: JSON.stringify({ ok: true, service: 'question-comments' }) });
-    if (route === VOTE_ROUTE || route === RANK_ROUTE) {
+    if (route === VOTE_ROUTE || route === RANK_ROUTE || route === CATALOG_ROUTE) {
       try { return send(await voteGateway({ event: originalEvent, headers, method, route })); }
       catch { return send(response(503, '题目评价暂时不可用，请稍后再试。')); }
     }

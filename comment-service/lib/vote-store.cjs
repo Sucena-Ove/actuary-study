@@ -80,6 +80,17 @@ function createVoteStore(pool, secret) {
       ) AS totals WHERE ${primary}>0 ORDER BY ${primary} DESC, question_id ASC LIMIT $2`, [questionIds, limit]);
       return rows.map((row) => ({ questionId: Number(row.question_id), likes: Number(row.likes), dislikes: Number(row.dislikes) }));
     },
+    async questionCatalog(questionIds) {
+      await ensureTable();
+      // One aggregate read, then merge in zero-vote questions from the manifest.
+      // Never use stored rows as the authority for which questions still exist.
+      const { rows } = await pool.query(`SELECT question_id,
+        COUNT(*) FILTER (WHERE vote=1)::integer AS likes,
+        COUNT(*) FILTER (WHERE vote=-1)::integer AS dislikes
+        FROM wl_question_vote WHERE question_id=ANY($1::bigint[]) GROUP BY question_id`, [questionIds]);
+      const totals = new Map(rows.map((row) => [Number(row.question_id), { likes: Number(row.likes), dislikes: Number(row.dislikes) }]));
+      return [...questionIds].sort((a, b) => a - b).map((questionId) => ({ questionId, ...(totals.get(questionId) || { likes: 0, dislikes: 0 }) }));
+    },
   };
 }
 

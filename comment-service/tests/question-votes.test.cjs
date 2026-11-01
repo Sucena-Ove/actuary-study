@@ -27,6 +27,7 @@ function fixture(overrides = {}) {
     readQuestionVote: read,
     writeQuestionVote: async (questionId, voterId, vote) => { calls.push(['write', questionId, voterId, vote]); if (vote) votes.set(`${questionId}:${voterId}`, vote); else votes.delete(`${questionId}:${voterId}`); return read(questionId, voterId); },
     questionRanking: async (...args) => { calls.push(['rank', ...args]); return [{ questionId: 587, likes: 2, dislikes: 1 }]; },
+    questionCatalog: async (ids) => { calls.push(['catalog', ids]); return ids.map((questionId) => ({ questionId, likes: 0, dislikes: 0 })); },
     rateLimit: async (...args) => { calls.push(['limit', ...args]); return true; },
     ...overrides,
   };
@@ -34,6 +35,61 @@ function fixture(overrides = {}) {
   return { gateway, calls, votes };
 }
 const data = (response) => JSON.parse(response.body).data;
+
+test('catalog needs a genuine proof, returns known IDs with totals, and never delegates to Waline', async () => {
+  const { gateway, calls } = fixture();
+  for (const invalid of ['', 'true', verifier, 'f'.repeat(64)]) {
+    const response = await gateway(event('/api/question-catalog', 'GET', undefined, {}, { 'x-study-access': invalid }));
+    assert.equal(response.statusCode, 403);
+    assert.equal(data(response), undefined);
+  }
+  assert.equal(calls.length, 0);
+  const good = await gateway(event('/api/question-catalog', 'GET', undefined, {}, { 'x-study-access': proof }));
+  assert.equal(good.statusCode, 200);
+  assert.equal(good.headers['cache-control'], 'no-store');
+  assert.deepEqual(data(good), { items: [{ questionId: 1, likes: 0, dislikes: 0 }, { questionId: 587, likes: 0, dislikes: 0 }], total: 2 });
+  assert.deepEqual(calls, [['catalog', [1, 587]]]);
+  assert.doesNotMatch(good.body, new RegExp(`myVote|voter|hash|${proof}|${verifier}`));
+});
+
+test('catalog rejects query/method aliases, duplicate transport parameters and unsupported paths', async () => {
+  const { gateway, calls } = fixture();
+  for (const query of [{ questionId: '587' }, { limit: '611' }, { sort: 'likes' }, { proof }, { _method: 'PUT' }, { blank: '' }]) {
+    assert.equal((await gateway(event('/api/question-catalog', 'GET', undefined, query, { 'x-study-access': proof }))).statusCode, 400);
+  }
+  for (const method of ['POST', 'PUT', 'DELETE', 'HEAD']) {
+    const denied = await gateway(event('/api/question-catalog', method, {}, {}, { 'x-study-access': proof }));
+    assert.equal(denied.statusCode, 405);
+    assert.equal(denied.headers.allow, 'GET');
+  }
+  for (const route of ['/api/question-catalog/1', '/api/Question-catalog', '/api/question%2dcatalog', '/api//question-catalog']) assert.equal((await gateway(event(route, 'GET', undefined, {}, { 'x-study-access': proof }))).statusCode, 404);
+  const duplicate = event('/api/question-catalog', 'GET', undefined, {}, { 'x-study-access': proof });
+  duplicate.multiValueQueryStringParameters = { proof: [proof, proof] };
+  assert.equal((await gateway(duplicate)).statusCode, 400);
+  const alternateHeader = event('/api/question-catalog');
+  alternateHeader.multiValueHeaders = { 'X-Study-Access': [proof] };
+  assert.equal((await gateway(alternateHeader)).statusCode, 403);
+  assert.equal(calls.length, 0);
+});
+
+test('catalog applies exact CORS, accepts credential-free preflight, and isolates database failures', async () => {
+  const { gateway, calls } = fixture({ questionCatalog: async () => { throw new Error('PRIVATE_CATALOG_SQL'); } });
+  const evil = await gateway(event('/api/question-catalog', 'GET', undefined, {}, { 'x-study-access': proof, origin: 'https://evil.example' }));
+  assert.equal(evil.statusCode, 403);
+  assert.equal(evil.headers['access-control-allow-origin'], undefined);
+  const options = await gateway(event('/api/question-catalog', 'OPTIONS'));
+  assert.equal(options.statusCode, 204);
+  assert.equal(options.headers['access-control-allow-origin'], config.siteOrigin);
+  assert.match(options.headers['access-control-allow-headers'], /X-Study-Access/);
+  assert.equal(options.headers['access-control-allow-credentials'], undefined);
+  const unavailable = await gateway(event('/api/question-catalog', 'GET', undefined, {}, { 'x-study-access': proof }));
+  assert.equal(unavailable.statusCode, 503);
+  assert.equal(unavailable.headers['access-control-allow-origin'], config.siteOrigin);
+  assert.doesNotMatch(unavailable.body, /PRIVATE|CATALOG|SQL/);
+  assert.equal((await gateway(event('/api/comment', 'GET', undefined, { path: '/actuary-study/questions/587.html' }))).statusCode, 200);
+  assert.equal((await gateway(event('/ui/register'))).statusCode, 403);
+  assert.equal(calls.filter(([kind]) => kind === 'waline').length, 1);
+});
 
 test('public likes and dislikes, same browser replacement and undo, no voter metadata in response', async () => {
   const { gateway } = fixture();

@@ -51,7 +51,8 @@ function database() {
       statements.push({ id: 0, sql, params });
       if (sql.includes('AS my_vote')) return counts(rows, params);
       assert.match(sql, /WHERE question_id=ANY\(\$1::bigint\[\]\)/);
-      assert.match(sql, /ORDER BY (likes|dislikes) DESC, question_id ASC LIMIT \$2/);
+      const catalog = !sql.includes('ORDER BY');
+      if (!catalog) assert.match(sql, /ORDER BY (likes|dislikes) DESC, question_id ASC LIMIT \$2/);
       const totals = new Map();
       for (const row of rows.values()) if (params[0].includes(row.question_id)) {
         const aggregate = totals.get(row.question_id) || { question_id: row.question_id, likes: 0, dislikes: 0 };
@@ -59,6 +60,7 @@ function database() {
         if (row.vote === -1) aggregate.dislikes++;
         totals.set(row.question_id, aggregate);
       }
+      if (catalog) return { rows: [...totals.values()] };
       const sort = sql.includes('ORDER BY dislikes') ? 'dislikes' : 'likes';
       return { rows: [...totals.values()].filter((row) => row[sort] > 0).sort((a, b) => b[sort] - a[sort] || a.question_id - b.question_id).slice(0, params[1]) };
     },
@@ -138,4 +140,25 @@ test('operator migration and lazy schema agree without touching old Waline table
   assert.doesNotMatch(migration, /\b(DROP|ALTER|DELETE|TRUNCATE)\b/);
   assert.match(CREATE_VOTES, /PRIMARY KEY \(question_id, voter_hash\)/);
   assert.match(CREATE_VOTES, /CHECK \(vote IN \(-1, 0, 1\)\)/);
+});
+
+test('catalog aggregates once, keeps manifest questions in numeric order, and fills missing or neutral votes with zero', async () => {
+  const pool = database(), store = createVoteStore(pool, secret);
+  await store.writeQuestionVote(10, voter, 1);
+  await store.writeQuestionVote(10, 'd4'.repeat(32), -1);
+  await store.writeQuestionVote(2, voter, 0);
+  await store.writeQuestionVote(999, voter, 1); // Outside the current manifest.
+  const before = pool.statements.length;
+  const ids = [10, 8, 2, 1];
+  const result = await store.questionCatalog(ids);
+  assert.deepEqual(result, [
+    { questionId: 1, likes: 0, dislikes: 0 }, { questionId: 2, likes: 0, dislikes: 0 },
+    { questionId: 8, likes: 0, dislikes: 0 }, { questionId: 10, likes: 1, dislikes: 1 },
+  ]);
+  assert.deepEqual(ids, [10, 8, 2, 1]);
+  const reads = pool.statements.slice(before);
+  assert.equal(reads.length, 1);
+  assert.match(reads[0].sql, /GROUP BY question_id/);
+  assert.deepEqual(reads[0].params, [ids]);
+  assert.doesNotMatch(JSON.stringify(result), /voter|myVote|hash/);
 });

@@ -416,6 +416,59 @@ function checkCommentAccessIntegration() {
   assert.equal(h.nodes.get('question-comments').hidden, true);
 }
 
+async function checkCatalogIntegration() {
+  const h = harness(), c = h.context, mounts = [];
+  let proof = '', unmounts = 0;
+  c.StudyVault = { getRankProof: () => proof, lock() { proof = ''; } };
+  c.ActuaryCatalog = {
+    mount(host, details) { mounts.push(details); host.hidden = false; },
+    unmount() { unmounts++; }
+  };
+  await h.click('catalog-all');
+  assert.equal(mounts.length, 0, 'guest cannot request the complete directory');
+  c.accessState.unlocked = true;
+  c.render();
+  assert.equal(mounts.length, 0, 'UI flag alone cannot authorize directory loading');
+  proof = 'a'.repeat(64);
+  await h.click('catalog-all');
+  assert.equal(mounts.at(-1).initialFilters.sort, 'questionId');
+  assert.equal(mounts.at(-1).initialFilters.direction, 'asc');
+  assert.equal(mounts.at(-1).questions.length, c.BANK.questions.length);
+  await h.click('tag', { tag: '测试标签', module: '测试模块' });
+  assert.equal(mounts.at(-1).initialFilters.module, '测试模块');
+  assert.equal(mounts.at(-1).initialFilters.tag, '测试标签');
+  const token = mounts.at(-1).filterToken;
+  mounts.at(-1).onPractice([10024, 3, 1]);
+  assert.deepEqual(Array.from(c.progress.session.ids), [10024, 3, 1], 'practice preserves whole-list sorting');
+  assert.equal(c.progress.session.returnTo, 'rankings');
+  assert(h.nodes.get('app').innerHTML.includes('返回题目目录'));
+  assert.equal(c.validate(c.progress).session.returnTo, 'rankings', 'saved sessions retain their return target');
+  await h.click('session-back');
+  assert.equal(c.screen, 'rankings');
+  assert.equal(mounts.at(-1).filterToken, token, 'return must not reset directory filters or pagination');
+  const oldSession = c.progress.session;
+  c.confirm = () => false;
+  mounts.at(-1).onOpen(2);
+  assert.equal(c.screen, 'rankings');
+  assert.equal(c.progress.session, oldSession, 'cancel must not replace an existing session');
+  c.confirm = () => true;
+  mounts.at(-1).onOpen(2);
+  assert.equal(c.progress.session.ids[0], 2);
+  c.appBack();
+  assert.equal(c.screen, 'rankings');
+  await h.click('tag', { tag: '测试标签' });
+  assert.equal(mounts.at(-1).initialFilters.module, '', 'home topic shortcuts can span all modules');
+  await h.click('rank-sort', { sort: 'dislikes' });
+  assert.equal(mounts.at(-1).initialFilters.sort, 'dislikes');
+  assert.equal(mounts.at(-1).initialFilters.direction, 'desc');
+  assert.equal(mounts.at(-1).initialFilters.tag, '');
+  const mountedBeforeLock = mounts.length;
+  c.forgetAccess();
+  assert(unmounts > 0);
+  await h.click('catalog-all');
+  assert.equal(mounts.length, mountedBeforeLock, 'clearing access prevents directory remount');
+}
+
 async function main() {
   checkDailyDrawAndPersistence();
   checkRollBoundariesAndMigration();
@@ -425,6 +478,7 @@ async function main() {
   await checkVerificationIsRequired();
   checkImportAllowlist();
   checkCommentAccessIntegration();
+  await checkCatalogIntegration();
   await checkPublishedQueryRoute();
   console.log('PASS: fixed daily pool, roll bounds/migration/day rollover, guest route guards, unknown-answer quota, preserved progress, remembered-key verification, key-free backups and generated query routes.');
 }

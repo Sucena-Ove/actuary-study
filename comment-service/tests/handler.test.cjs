@@ -37,6 +37,7 @@ const query = async (sql, params) => {
     return { rows: [{ likes: matching.filter((row) => row.vote === 1).length, dislikes: matching.filter((row) => row.vote === -1).length, my_vote: matching.find((row) => row.hash === params[1])?.vote || 0 }] };
   }
   if (sql.includes('AS totals')) return { rows: [] };
+  if (sql.includes('GROUP BY question_id')) return { rows: [] };
   if (sql.includes('SELECT id, rid')) return { rows: rows.Comment.filter((row) => String(row.objectId) === String(params[0]) && row.url === params[1] && row.status === params[2]).map((row) => ({ id: row.objectId, rid: row.rid })) };
   return { rows: [] };
 };
@@ -103,6 +104,22 @@ test('production export serves anonymous vote reads/writes and verifies independ
   const rank = await request('/api/question-rank', 'GET', undefined, {}, { 'x-study-access': rankProof });
   assert.equal(rank.statusCode, 200, rank.body);
   assert.deepEqual(JSON.parse(rank.body).data, { sort: 'likes', limit: 20, items: [] });
+});
+
+test('production catalog returns the entire current manifest behind the same proof boundary', async () => {
+  assert.equal((await request('/api/question-catalog')).statusCode, 403);
+  assert.equal((await request('/api/question-catalog', 'GET', undefined, {}, { 'x-study-access': 'a'.repeat(64) })).statusCode, 403);
+  assert.equal((await request('/api/question-catalog', 'POST', {}, {}, { 'x-study-access': rankProof })).statusCode, 405);
+  assert.equal((await request('/api/question-catalog', 'GET', undefined, { limit: '611' }, { 'x-study-access': rankProof })).statusCode, 400);
+  const response = await request('/api/question-catalog', 'GET', undefined, {}, { 'x-study-access': rankProof });
+  assert.equal(response.statusCode, 200, response.body);
+  const manifest = require('../question-ids.json');
+  const ids = [...(Array.isArray(manifest) ? manifest : manifest.ids)].sort((a, b) => a - b);
+  const body = JSON.parse(response.body);
+  assert.equal(body.errno, 0);
+  assert.equal(body.data.total, ids.length);
+  assert.deepEqual(body.data.items, ids.map((questionId) => ({ questionId, likes: 0, dislikes: 0 })));
+  assert.doesNotMatch(response.body, /myVote|voter|hash/);
 });
 
 test('production handler initializes pinned Waline and serves guarded management UI', async () => {
