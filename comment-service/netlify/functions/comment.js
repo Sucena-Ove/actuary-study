@@ -5,13 +5,14 @@ const { createGateway, makeConfig, contentError, ANONYMOUS } = require('../../li
 const { createStore } = require('../../lib/store.cjs');
 const { diagnostic } = require('../../lib/diagnostics.cjs');
 const manifest = require('../../question-ids.json');
+const studyAccessManifest = require('../../study-access-verifiers.json');
 
 let handler;
 let initializationStage = 'not-started';
 
 function initialize() {
   initializationStage = 'config';
-  const config = makeConfig(process.env, Array.isArray(manifest) ? manifest : manifest.ids);
+  const config = makeConfig(process.env, Array.isArray(manifest) ? manifest : manifest.ids, studyAccessManifest);
   initializationStage = 'store';
   const store = createStore(process.env);
   // Explicit values avoid accidental exposure of commenter geography, email

@@ -85,11 +85,29 @@ Netlify Functions 使用 AWS Lambda Node.js 运行时。Lambda 默认关闭 `req
 
 评论经 Waline 的 DOMPurify 渲染净化，禁远程图片、iframe、视频等媒体。Markdown 基本格式可用，暂不启用服务端 TeX 运算。关闭公开地区、设备信息、外部头像、第三方 OAuth 与 Akismet 内容上报。所有访客显示匿名，不代表云端绝不记录网络信息：Waline 评论表仍保存 IP 供防刷和后台管理，Netlify 也有请求日志。不要在评论里提交个人隐私。
 
-前端关闭访客登录、注册、点赞、全站最近评论、文章计数等功能；服务端同样拒绝这些额外写入接口。管理员 UI 使用锁定版本的本地脚本，不加载浮动 CDN。数据库导入/导出 API 关闭，备份请通过 Neon 控制台或 PostgreSQL 官方工具完成，并只保存在私密位置。没有配置 SMTP，所以暂不提供邮箱找回密码；请把管理员密码保存在密码管理器里。
+前端关闭访客登录、注册、评论点赞、全站最近评论、文章计数等功能；服务端同样拒绝这些 Waline 额外写入接口。独立的题目赞踩功能见下文。管理员 UI 使用锁定版本的本地脚本，不加载浮动 CDN。数据库导入/导出 API 关闭，备份请通过 Neon 控制台或 PostgreSQL 官方工具完成，并只保存在私密位置。没有配置 SMTP，所以暂不提供邮箱找回密码；请把管理员密码保存在密码管理器里。
 
 需要审核时将 `COMMENT_AUDIT=true`，重新部署，再同步修改前端提示。需要人机验证时可在 Cloudflare 官方申请 Turnstile，配置 `TURNSTILE_KEY` 与 `TURNSTILE_SECRET`；公开 key 可以给前端，secret 只能给服务端。访客仍不需要注册。首次部署未配置此第三方服务。
 
 ## 本地验收与依赖
+
+### 题目赞踩与密钥榜单
+
+每道题的赞数、踩数公开可读，任何游客可以匿名投一票、切换赞踩或撤销。无登录设备用本机随机的 32 字节标识（64 位小写 hex）表示；同设备同题只保存一条记录。它不是实名身份：换浏览器、清除本地数据或更换设备仍可能再次投票，不能声称彻底阻止刷票。服务器同时对平台提供的真实连接 IP 和设备各做 1 秒限频，不信任调用者的 `x-forwarded-for`。两类限频键和投票设备标识都保存为服务端 HMAC，不保存原始设备标识或新增投票 IP 字段；现有 Waline 评论 IP 规则不变。多人共用出口时，可能需要间隔一秒操作。
+
+新增投票数据只写 `wl_question_vote`，唯一键为题号和设备 HMAC，`vote` 为 `1`、`-1`、`0`；限频复用 `wl_request_limit` 的独立命名空间。撤销改成 0 并保留记录，不删除其他访客的数据。运行时首次访问自动以事务与 advisory lock 执行 `CREATE TABLE IF NOT EXISTS`；也可预先执行 `sql/question-votes.sql`。既有评论、用户表无需迁移。建表或投票连接失败只令评价接口返回 503，不关闭原评论及管理后台。写入按题串行化并在同一事务计数，重复请求不会叠加票数。HMAC 使用现有 `JWT_TOKEN` 配合独立上下文；轮换该秘密会使同一浏览器产生新的设备摘要，旧票仍保留，需要在轮换前单独规划投票身份迁移。
+
+| 接口 | 输入 | 成功响应中的 `data` |
+| --- | --- | --- |
+| `GET /api/question-vote?questionId=587` | 可选 `X-Study-Voter`，不传则 `myVote=0` | `{questionId, likes, dislikes, myVote}` |
+| `PUT /api/question-vote` | 必填 `X-Study-Voter`，JSON `{questionId:587,vote:1}`；`vote` 可为 `-1` 或 `0` | `{questionId, likes, dislikes, myVote}` |
+| `GET /api/question-rank?sort=likes&limit=20` | 必填 `X-Study-Access`；`sort` 可为 `likes`/`dislikes`，`limit` 为 1–100 | `{sort, limit, items:[{questionId,likes,dislikes}]}` |
+
+接口成功返回 `{errno:0,data:...}`；错误返回 `{errno:HTTP状态码,errmsg:提示}`，均 `Cache-Control:no-store`。429 带 `Retry-After:1`。榜单只包含对应票数大于零且仍在题库清单里的题，票数降序、平票题号升序。只允许既有生产站点跨域；前端请求不携带管理员 cookie 或 Waline 令牌。URL、响应和应用日志不包含凭证或设备标识。
+
+榜单要求真实解锁凭证，不信任前端的 unlocked 布尔值或公开 key-slot ID。前端解密原有题库的 32 字节内容密钥后，通过 `HKDF-SHA256(IKM=rawContentKey,salt=manifest.salt,info=UTF8(manifest.bankId+':question-rank-access:v1'),L=32)` 派生独立凭证，用小写 hex 放在 `X-Study-Access` 请求头。后端只持有 `study-access-verifiers.json` 中 `SHA256(UTF8(hexProof))` 的值，使用定长常量时间比较校验。该 JSON 是单向验证值，可随源码发布，不能拿它本身当凭证；禁止把原密钥、内容密钥或可用 proof 写入源码、构建日志或 URL。
+
+持有有效密钥的人仍可主动分享自己的授权凭证，也可整理公开的逐题计数。这里保护的是内置榜单入口，不声称对公开赞踩数提供反抓取保密。更强的真人去重、个人权限回收需另建账号体系。本模块的内存数据库替身测试覆盖语义及事务边界，不替代上线后对真实 Neon 的有限验收。
 
 ```sh
 npm ci --ignore-scripts

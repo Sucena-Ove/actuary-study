@@ -2,6 +2,7 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+const { validateVerifiers } = require('../lib/question-votes.cjs');
 
 // @waline/admin 0.36.0 concatenates SITE_URL and the thread path. Our thread
 // already contains /actuary-study, so resolve only the fixed question format.
@@ -18,6 +19,8 @@ function build() {
   const manifest = JSON.parse(fs.readFileSync(path.join(root, 'question-ids.json'), 'utf8'));
   const ids = Array.isArray(manifest) ? manifest : manifest.ids;
   if (!ids?.length || new Set(ids).size !== ids.length || ids.some((id) => !Number.isSafeInteger(id) || id < 1)) throw new Error('Invalid question manifest');
+  const verifiers = validateVerifiers(JSON.parse(fs.readFileSync(path.join(root, 'study-access-verifiers.json'), 'utf8')));
+  if (!verifiers.length) throw new Error('At least one study access verifier is required for rankings');
   const admin = patchAdminBundle(fs.readFileSync(require.resolve('@waline/admin'), 'utf8'));
   fs.mkdirSync(path.join(root, 'public'), { recursive: true });
   fs.writeFileSync(path.join(root, 'public/admin.js'), admin);

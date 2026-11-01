@@ -2,6 +2,7 @@
 
 const crypto = require('node:crypto');
 const { Pool } = require('pg');
+const { createVoteStore } = require('./vote-store.cjs');
 
 function createStore(env) {
   for (const name of ['PG_HOST', 'PG_DB', 'PG_USER', 'PG_PASSWORD', 'JWT_TOKEN']) {
@@ -17,6 +18,7 @@ function createStore(env) {
     ssl: { rejectUnauthorized: true },
   });
   return {
+    ...createVoteStore(pool, env.JWT_TOKEN),
     async emptyUsers() {
       const { rows } = await pool.query('SELECT NOT EXISTS (SELECT 1 FROM wl_users) AS empty');
       return rows[0].empty === true;

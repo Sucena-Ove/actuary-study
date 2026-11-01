@@ -5,6 +5,7 @@
 // isolated in-memory fixture, so no network credentials or Neon account are used.
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const crypto = require('node:crypto');
 const { makeSetupCookie, COOKIE_NAME, FUNCTION_PREFIX } = require('../lib/gateway.cjs');
 const origin = 'https://comment-handler-test.netlify.app';
 Object.assign(process.env, {
@@ -14,12 +15,28 @@ Object.assign(process.env, {
   PG_HOST: 'fixture.invalid', PG_DB: 'fixture', PG_USER: 'fixture', PG_PASSWORD: 'fixture', PG_SSL: 'true',
 });
 const rows = { Users: [], Comment: [], Counter: [] };
+const questionVotes = new Map();
+const rankProof = 'e5'.repeat(32);
+// Replace only this test process's manifest export with a synthetic credential.
+// Neither a real vault key nor a production proof is read into the integration test.
+const accessPath = require.resolve('../study-access-verifiers.json');
+require(accessPath);
+require.cache[accessPath].exports = { version: 1, sha256: [crypto.createHash('sha256').update(rankProof).digest('hex')] };
 const pg = require('pg');
 const statements = [];
 const query = async (sql, params) => {
   statements.push(sql);
   if (sql.includes('NOT EXISTS')) return { rows: [{ empty: rows.Users.length === 0 }] };
   if (sql.includes('wl_request_limit')) return { rowCount: 1, rows: [] };
+  if (sql.startsWith('INSERT INTO wl_question_vote')) {
+    questionVotes.set(`${params[0]}:${params[1]}`, { questionId: params[0], hash: params[1], vote: params[2] });
+    return { rows: [] };
+  }
+  if (sql.includes('AS my_vote')) {
+    const matching = [...questionVotes.values()].filter((row) => row.questionId === params[0]);
+    return { rows: [{ likes: matching.filter((row) => row.vote === 1).length, dislikes: matching.filter((row) => row.vote === -1).length, my_vote: matching.find((row) => row.hash === params[1])?.vote || 0 }] };
+  }
+  if (sql.includes('AS totals')) return { rows: [] };
   if (sql.includes('SELECT id, rid')) return { rows: rows.Comment.filter((row) => String(row.objectId) === String(params[0]) && row.url === params[1] && row.status === params[2]).map((row) => ({ id: row.objectId, rid: row.rid })) };
   return { rows: [] };
 };
@@ -68,6 +85,25 @@ function request(route, method = 'GET', body, queryStringParameters = {}, extraH
     body: rawBody, isBase64Encoded: false,
   }, {});
 }
+
+test('production export serves anonymous vote reads/writes and verifies independent ranking proof', async () => {
+  const voter = 'd4'.repeat(32);
+  const read = await request('/api/question-vote', 'GET', undefined, { questionId: '587' });
+  assert.equal(read.statusCode, 200, read.body);
+  assert.deepEqual(JSON.parse(read.body).data, { questionId: 587, likes: 0, dislikes: 0, myVote: 0 });
+  for (const vote of [1, 1, -1, 0]) {
+    const response = await request('/api/question-vote', 'PUT', { questionId: 587, vote }, {}, { 'x-study-voter': voter });
+    assert.equal(response.statusCode, 200, response.body);
+    assert.deepEqual(JSON.parse(response.body).data, { questionId: 587, likes: Number(vote === 1), dislikes: Number(vote === -1), myVote: vote });
+  }
+  assert.equal(questionVotes.size, 1);
+  assert.notEqual([...questionVotes.values()][0].hash, voter);
+  assert.equal((await request('/api/question-rank')).statusCode, 403);
+  assert.equal((await request('/api/question-rank', 'GET', undefined, {}, { 'x-study-access': 'a'.repeat(64) })).statusCode, 403);
+  const rank = await request('/api/question-rank', 'GET', undefined, {}, { 'x-study-access': rankProof });
+  assert.equal(rank.statusCode, 200, rank.body);
+  assert.deepEqual(JSON.parse(rank.body).data, { sort: 'likes', limit: 20, items: [] });
+});
 
 test('production handler initializes pinned Waline and serves guarded management UI', async () => {
   const health = await request('/health');

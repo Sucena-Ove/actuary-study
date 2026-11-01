@@ -1,6 +1,7 @@
 'use strict';
 
 const crypto = require('node:crypto');
+const { createVoteGateway, validateVerifiers, VOTE_ROUTE, RANK_ROUTE } = require('./question-votes.cjs');
 
 const FUNCTION_PREFIX = '/.netlify/functions/comment';
 const COOKIE_NAME = '__Host-waline-setup';
@@ -42,7 +43,7 @@ function cookieHeader(value, maxAge = SETUP_LIFETIME) {
   return `${COOKIE_NAME}=${value}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${maxAge}`;
 }
 
-function makeConfig(env, questionIds) {
+function makeConfig(env, questionIds, studyAccessManifest) {
   const server = new URL(env.SERVER_URL);
   const site = new URL(env.SITE_URL || 'https://sucena-ove.github.io/actuary-study/');
   if (server.protocol !== 'https:' || server.pathname.replace(/\/$/, '') !== FUNCTION_PREFIX || server.search || server.hash) {
@@ -60,6 +61,8 @@ function makeConfig(env, questionIds) {
     siteOrigin: site.origin,
     allowedOrigins: new Set([server.origin, site.origin]),
     questionPaths: new Set(questionIds.map((id) => `/actuary-study/questions/${id}.html`)),
+    questionIds: new Set(questionIds),
+    studyAccessVerifiers: validateVerifiers(studyAccessManifest),
     bootstrapToken: env.BOOTSTRAP_TOKEN || '',
     maxCommentLength: MAX_COMMENT_LENGTH,
   };
@@ -98,7 +101,7 @@ function finish(result, origin, config, isSetupPage = false) {
   if (origin && config.allowedOrigins.has(origin)) {
     headers['access-control-allow-origin'] = origin;
     headers['access-control-allow-methods'] = 'GET, POST, PUT, DELETE, OPTIONS';
-    headers['access-control-allow-headers'] = 'Content-Type, Authorization';
+    headers['access-control-allow-headers'] = 'Content-Type, Authorization, X-Study-Access, X-Study-Voter';
   }
   // Same-origin admin sessions do not need cross-origin credential sharing.
   const multiValueHeaders = Object.fromEntries(Object.entries(result.multiValueHeaders || {}).filter(([key]) => !key.toLowerCase().startsWith('access-control-')));
@@ -142,6 +145,7 @@ function setupPage() {
 }
 
 function createGateway({ config, waline, store, now = Date.now }) {
+  const voteGateway = createVoteGateway({ config, store, readBody });
   return async function handler(originalEvent, context) {
     // Netlify uses Lambda v1 events. Eliminate alternative multi-value and v2
     // transport representations before validation or delegation to serverless-http.
@@ -165,6 +169,10 @@ function createGateway({ config, waline, store, now = Date.now }) {
       return send({ statusCode: 204, body: '', headers: {} });
     }
     if (method === 'GET' && route === '/health') return send({ statusCode: 200, headers: {}, body: JSON.stringify({ ok: true, service: 'question-comments' }) });
+    if (route === VOTE_ROUTE || route === RANK_ROUTE) {
+      try { return send(await voteGateway({ event: originalEvent, headers, method, route })); }
+      catch { return send(response(503, '题目评价暂时不可用，请稍后再试。')); }
+    }
     if (route === '/setup' && method === 'GET') return send(setupPage(), true);
     if (route === '/setup/session') {
       if (method !== 'POST' || origin !== config.serverOrigin) return send(response(403, '请在评论服务自己的初始化页面操作。'));

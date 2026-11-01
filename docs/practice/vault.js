@@ -3,12 +3,15 @@
   'use strict';
   function failure(code, message) { const error = new Error(message); error.code = code; return error; }
   const utf8 = new TextEncoder();
+  let rankProof = '', unlockGeneration = 0;
   const from64 = value => {
     if (typeof value !== 'string' || value.length > 8000000) throw new Error('加密文件格式不正确。');
     return Uint8Array.from(atob(value), c => c.charCodeAt(0));
   };
   const hex = bytes => Array.from(new Uint8Array(bytes), n => n.toString(16).padStart(2, '0')).join('');
   async function unlock(input) {
+    const generation = ++unlockGeneration;
+    rankProof = '';
     if (!globalThis.crypto || !crypto.subtle) throw failure('UNSUPPORTED', '请通过 HTTPS 网站或本机预览地址打开，并使用较新的浏览器。');
     const code = String(input || '').toUpperCase().replace(/[\s-]/g, '');
     if (!/^SA[A-Z2-7]{32}$/.test(code)) throw failure('FORMAT', '密钥格式不正确，请完整粘贴作者提供的密钥。');
@@ -23,7 +26,7 @@
     if (manifest.version !== 1 || manifest.algorithm !== 'AES-256-GCM+HKDF-SHA-256' ||
         !/^[A-Za-z0-9_-]{1,80}$/.test(manifest.bankId) || !Array.isArray(manifest.keySlots) ||
         manifest.keySlots.length > 500 || !manifest.payload) throw failure('UNSUPPORTED', '密钥验证文件版本不受支持。');
-    let rawKey, plaintext;
+    let rawKey, plaintext, pendingProof = '';
     try {
       const id = hex(await crypto.subtle.digest('SHA-256', utf8.encode('lookup:' + code)));
       const slot = manifest.keySlots.find(item => item.id === id);
@@ -38,14 +41,22 @@
         additionalData: utf8.encode(manifest.bankId + '|key|1'), tagLength: 128}, wrappingKey, from64(slot.wrappedKey)));
       if (rawKey.length !== 32) throw new Error();
       const contentKey = await crypto.subtle.importKey('raw', rawKey, 'AES-GCM', false, ['decrypt']);
+      const rankMaterial = await crypto.subtle.importKey('raw', rawKey, 'HKDF', false, ['deriveBits']);
+      pendingProof = hex(await crypto.subtle.deriveBits({name: 'HKDF', hash: 'SHA-256', salt,
+        info: utf8.encode(manifest.bankId + ':question-rank-access:v1')}, rankMaterial, 256));
       rawKey.fill(0);
       plaintext = new Uint8Array(await crypto.subtle.decrypt({name: 'AES-GCM', iv: payloadIv,
         additionalData: utf8.encode(manifest.bankId + '|payload|1'), tagLength: 128}, contentKey, from64(manifest.payload.data)));
       const bank = JSON.parse(new TextDecoder('utf-8', {fatal: true}).decode(plaintext));
       if (bank.id !== manifest.bankId || !Array.isArray(bank.questions) || !Array.isArray(bank.sources)) throw new Error();
+      if (generation !== unlockGeneration) throw failure('STALE', '解锁状态已改变，请重试。');
+      rankProof = pendingProof;
       return bank;
     } catch (error) { throw failure(error.code === 'INVALID_KEY' ? 'INVALID_KEY' : 'CORRUPT', '无法解锁，请核对密钥；也可能是验证文件已损坏。'); }
-    finally { if (rawKey) rawKey.fill(0); if (plaintext) plaintext.fill(0); }
+    finally { pendingProof = ''; if (rawKey) rawKey.fill(0); if (plaintext) plaintext.fill(0); }
   }
-  globalThis.StudyVault = Object.freeze({unlock, lock: function () {}});
+  globalThis.StudyVault = Object.freeze({unlock,
+    getRankProof: function () { return rankProof; },
+    lock: function () { unlockGeneration += 1; rankProof = ''; }
+  });
 }());
