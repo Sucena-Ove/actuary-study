@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse, collections, datetime, hashlib, html, json, re, shutil
 from pathlib import Path
 from urllib.parse import quote, urlparse
+from tools.knowledge_map import render_knowledge_map
 
 HERE = Path(__file__).resolve().parent
 parser = argparse.ArgumentParser()
@@ -45,7 +46,7 @@ def fmt(value, prefix=''):
     return ''.join(pieces)
 
 pages=[]
-def page(path,title,description,body,prefix='',kind='website',script='',indexable=True):
+def page(path,title,description,body,prefix='',kind='website',script='',indexable=True,styles=''):
     canonical=site_url+path
     if path=='index.html':canonical=site_url
     if indexable:pages.append(canonical)
@@ -53,8 +54,8 @@ def page(path,title,description,body,prefix='',kind='website',script='',indexabl
 <html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{esc(title)} · 精算随身练</title><meta name="description" content="{esc(description)}"><meta name="theme-color" content="#205d49"><meta name="robots" content="{"index,follow" if indexable else "noindex,follow"}">
 <link rel="canonical" href="{esc(canonical)}"><meta property="og:type" content="{kind}"><meta property="og:locale" content="zh_CN"><meta property="og:site_name" content="精算随身练"><meta property="og:title" content="{esc(title)}"><meta property="og:description" content="{esc(description)}"><meta property="og:url" content="{esc(canonical)}">
-<link rel="icon" href="{prefix}assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="{prefix}assets/site.css"></head><body>
-<a class="sr-only" href="#main">跳至正文</a><header class="top"><div class="wrap top-inner"><a class="brand" href="{prefix}index.html"><span class="symbol" aria-hidden="true">Σ</span><span>精算随身练<small>PROBABILITY · THINK IT THROUGH</small></span></a><nav class="site-nav" aria-label="主导航"><a href="{prefix}topics.html">知识点</a><a href="{prefix}questions.html">题目目录</a><a href="{prefix}notes/zero-truncated-poisson.html">学习笔记</a><a href="{prefix}games/index.html">小游戏</a><a class="nav-practice" href="{prefix}practice/index.html">开始练习 →</a></nav></div></header>
+<link rel="icon" href="{prefix}assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="{prefix}assets/site.css">{styles}</head><body>
+<a class="sr-only" href="#main">跳至正文</a><header class="top"><div class="wrap top-inner"><a class="brand" href="{prefix}index.html"><span class="symbol" aria-hidden="true">Σ</span><span>精算随身练<small>PROBABILITY · THINK IT THROUGH</small></span></a><nav class="site-nav" aria-label="主导航"><a href="{prefix}index.html#knowledge-map">知识导图</a><a href="{prefix}questions.html">题目目录</a><a href="{prefix}notes/zero-truncated-poisson.html">学习笔记</a><a href="{prefix}games/index.html">小游戏</a><a class="nav-practice" href="{prefix}practice/index.html">开始练习 →</a></nav></div></header>
 <main id="main" class="wrap">{body}</main><footer class="footer"><div class="wrap"><p>精算随身练 · 题库修订版<br>先思考，再看答案。每题都有一个值得弄懂的地方。</p><div><a href="{prefix}about.html">关于与来源</a><a href="{prefix}questions.html">全部题目</a><a href="{prefix}about.html#contact">联系作者</a><a href="https://space.bilibili.com/247892366" rel="noopener noreferrer">B站 · UID 247892366 ↗</a></div></div></footer>{script}</body></html>'''
     write(path,content)
 
@@ -74,27 +75,28 @@ def module_cards():
 advanced=[q for q in questions if q['id']>=10001]
 addition=bank.get('revisionAdditions',{})
 advanced_text=f'本次新增 {addition["count"]} 道回忆改编题' if addition.get('count') else (f'新增 {len(advanced)} 道进阶题' if advanced else '从条件分布到 UMVUE')
-home=f'''<section class="hero"><div><span class="eyebrow">一本随时翻开的概率学习笔记</span><h1>把一道题想明白，<br>比记住答案更重要。</h1><p>从概率分布到统计推断，把零散考点连起来。每天掷一次骰子，随机领取一组题，先独立思考，再用分步解析检查每一步。</p><div class="actions"><a class="button primary" href="practice/index.html">开始今天的练习 →</a><a class="button" href="questions.html">翻一翻题目目录</a></div></div><aside class="notebook"><div class="label">本周的思考题 / 无偏估计</div><h2>已知总和 T = N，<br>怎样估计单点概率？</h2><div class="formula">T = X₁ + ⋯ + Xₙ = N<br>δₖ(N) = P(X₁ = k | T = N)</div><p class="note">从指示变量的无偏性出发，<br>推导关于 N 的一般 UMVUE。</p><a href="notes/zero-truncated-poisson.html">读这篇学习笔记 →</a></aside></section>
+home=f'''<section class="hero"><div><span class="eyebrow">一本随时翻开的概率学习笔记</span><h1>把一道题想明白，<br>比记住答案更重要。</h1><p>从概率分布到统计推断，把零散考点连起来。每天掷一次骰子，随机领取一组题，先独立思考，再用分步解析检查每一步。</p><div class="actions"><a class="button primary" href="practice/index.html">开始今天的练习 →</a><a class="button" href="#knowledge-map">看知识点导图 ↓</a></div></div><aside class="notebook"><div class="label">本周的思考题 / 无偏估计</div><h2>已知总和 T = N，<br>怎样估计单点概率？</h2><div class="formula">T = X₁ + ⋯ + Xₙ = N<br>δₖ(N) = P(X₁ = k | T = N)</div><p class="note">从指示变量的无偏性出发，<br>推导关于 N 的一般 UMVUE。</p><a href="notes/zero-truncated-poisson.html">读这篇学习笔记 →</a></aside></section>
 <div class="statline"><div><b>{len(questions)}</b><span>道题，逐题配解析</span></div><div><b>{len(modules)}</b><span>个知识模块</span></div><div><b>0</b><span>账号门槛，掷骰开练</span></div></div>
-<section class="section"><div class="section-head"><h2>从一个薄弱点开始。</h2><a href="topics.html">完整知识点目录 →</a></div><div class="module-grid">{module_cards()}</div></section>
+{render_knowledge_map(HERE/"content"/"knowledge-map.json", questions)}
 <section class="section"><div class="section-head"><h2>把公式背后的问题讲清楚。</h2><span class="note">{advanced_text}</span></div><article class="article-feature"><div class="label">Study note<br>01 / 统计推断</div><div><h3><a href="notes/zero-truncated-poisson.html">零截断泊松：总和、条件分布与 UMVUE</a></h3><p>给定 T = N，怎样估计 pλ(k)/(1 − e⁻λ)？先写一般条件分布，再沿无偏性、完备充分性推到 UMVUE；同时给出 n = 2 的简化式。</p></div><a class="arrow" href="notes/zero-truncated-poisson.html" aria-label="阅读零截断泊松学习笔记">↗</a></article></section>
 <section class="section"><div class="section-head"><h2>怎样使用这本题库？</h2></div><div class="module-grid"><div class="module-card"><h3>01 / 每日抽一组题</h3><p>每日随机抽取固定的一组题。输入作者密钥后，可按知识点自由选题。</p></div><div class="module-card"><h3>02 / 给思考留一点时间</h3><p>进入刷题区，选好答案后再确认。做错的题留在本机错题本，下一次接着练。</p></div><div class="module-card"><h3>03 / 回到模型与条件</h3><p>对照步骤检查假设、支持集和参数化。最后看易错提醒与来源说明，避免只记结论。</p></div></div></section>'''
 home+='<section class="section"><div class="section-head"><h2>给今天的练习一点变化。</h2></div><div class="module-grid"><a class="module-card" href="practice/index.html"><span>每日开局 ↗</span><h3>掷一次 120 面骰子</h3><p>随机获得 1–120 道题，今天只能练这组。刷新不会换题，明天重新抽取。</p></a><a class="module-card" href="practice/index.html"><span>自由练习 ↗</span><h3>输入作者提供的密钥</h3><p>解除每日数量与选题限制。密钥记在当前浏览器，下次打开自动恢复。</p></a><a class="module-card" href="games/index.html"><span>休息一下 ↗</span><h3>荒野套牛</h3><p>骑上马，试试训练、比赛与故事模式。练完再回来，继续今天的目标。</p></a></div></section>'
 home+='<section class="section contact-card"><div><span class="eyebrow">Contact / 联系作者</span><h2>一起把题目弄明白。</h2><p>有题目反馈、解题疑问、密钥咨询或学习交流，欢迎到 B 站主页私信。反馈时带上题号和你的思路，方便一起核对。</p><span class="note">B站 UID 247892366</span></div><a class="button" href="https://space.bilibili.com/247892366" rel="noopener noreferrer">前往 B 站主页 ↗</a></section>'
-page('index.html','概率论与数理统计学习题库',f'{len(questions)}道概率论与数理统计练习，含知识点分类、分步解析、来源说明与零截断泊松进阶笔记。免费在线刷题，无需注册。',home)
+map_assets={name:hashlib.sha256((HERE/'assets'/name).read_bytes()).hexdigest()[:12] for name in ['knowledge-map.css','knowledge-map.js']}
+page('index.html','概率论与数理统计学习题库',f'{len(questions)}道概率论与数理统计练习，含知识点分类、分步解析、来源说明与零截断泊松进阶笔记。免费在线刷题，无需注册。',home,styles=f'<link rel="stylesheet" href="assets/knowledge-map.css?v={map_assets["knowledge-map.css"]}">',script=f'<script src="assets/knowledge-map.js?v={map_assets["knowledge-map.js"]}" defer></script>')
 
 topic_body=f'<div class="page-head">{breadcrumb("知识点目录")}<span class="eyebrow">Knowledge map</span><h1>先找到你想弄懂的那一块。</h1><p>知识点标签连接相关题目；同一道题可以跨越多个考点。带“拓展提高”的题目用于深化理解，不表示属于当前考试必考范围。</p></div>'
 for m in modules:
     qs=[q for q in questions if q['module']==m];tags=collections.Counter(t for q in qs for t in q['tags'])
-    topic_body+=f'<section class="topic-group" id="{module_ids[m]}"><div class="section-head"><h2>{esc(m)}</h2><a href="questions.html?module={quote(m)}">查看 {len(qs)} 道题 →</a></div><div class="tag-grid">'+''.join(f'<a href="questions.html?module={quote(m)}&amp;q={quote(t)}">{esc(t)}<small>{c}</small></a>' for t,c in tags.most_common())+'</div></section>'
+    topic_body+=f'<section class="topic-group" id="{module_ids[m]}"><div class="section-head"><h2>{esc(m)}</h2><a href="questions.html?module={quote(m)}">查看 {len(qs)} 道题 →</a></div><div class="tag-grid">'+''.join(f'<a href="questions.html?module={quote(m)}&amp;tag={quote(t)}">{esc(t)}<small>{c}</small></a>' for t,c in tags.most_common())+'</div></section>'
 page('topics.html','知识点目录','按概率、分布、随机向量、抽样分布、估计、检验与回归分类的题库知识点索引。',topic_body)
 
 rows=[]
 for q in questions:
     search=' '.join([str(q['id']),q['module'],q['topic'],*q['tags']]).lower()
-    rows.append(f'<li class="question-row" data-search="{esc(search)}" data-module="{esc(q["module"])}" data-level="{esc(q["difficulty"])}"><div class="meta"><strong>#{q["id"]:03d}</strong><span>{esc(q["module"])}</span><span>{esc(q["difficulty"])}</span><span>{"拓展提高" if q.get("scope")=="extension" else "主科目练习"}</span></div><h2><a href="questions/{q["id"]:03d}.html">{esc(q["topic"])}</a></h2><p>进入刷题区查看；未解锁时仅可打开今日随机抽中的题目。</p></li>')
-catalog=f'<div class="page-head">{breadcrumb("题目目录")}<span class="eyebrow">Question library</span><h1>带着问题，找到题目。</h1><p>这里只展示知识点与题号。未解锁时仅可练习今日随机抽中的题目；输入密钥后可自由选题。</p></div><form id="search-form" class="searchbox" role="search"><label>搜索题号与考点<input id="search" type="search" placeholder="试试：零截断泊松、次序统计量、501" autocomplete="off"></label><label>知识模块<select id="filter-module"><option value="">全部模块</option>'+''.join(f'<option>{esc(m)}</option>' for m in modules)+'</select></label><label>难度<select id="filter-level"><option value="">全部难度</option><option>基础</option><option>中等</option><option>提高</option></select></label></form>'+f'<p class="result-count" id="result-count">共 {len(questions)} 道题</p><noscript><p class="note">目录仅含题号与知识点，刷题需启用 JavaScript。</p></noscript><ol class="question-list">'+''.join(rows)+'</ol><p id="empty-result" class="empty-result" hidden>暂时没有匹配的题目。试试更短的关键词，或将模块和难度恢复为“全部”。</p>'
-page('questions.html','题目目录与搜索',f'搜索{len(questions)}道概率论与数理统计题目，按知识模块和难度筛选，查看分步解析与出处。',catalog,script='<script src="assets/search.js" defer></script>')
+    rows.append(f'<li class="question-row" data-search="{esc(search)}" data-module="{esc(q["module"])}" data-level="{esc(q["difficulty"])}" data-tags="{esc(json.dumps(q["tags"],ensure_ascii=False))}"><div class="meta"><strong>#{q["id"]:03d}</strong><span>{esc(q["module"])}</span><span>{esc(q["difficulty"])}</span><span>{"拓展提高" if q.get("scope")=="extension" else "主科目练习"}</span></div><h2><a href="questions/{q["id"]:03d}.html">{esc(q["topic"])}</a></h2><p>进入刷题区查看；未解锁时仅可打开今日随机抽中的题目。</p></li>')
+catalog=f'<div class="page-head">{breadcrumb("题目目录")}<span class="eyebrow">Question library</span><h1>带着问题，找到题目。</h1><p>这里只展示知识点与题号。未解锁时仅可练习今日随机抽中的题目；输入密钥后可自由选题。</p></div><form id="search-form" class="searchbox" role="search"><label>搜索题号与考点<input id="search" type="search" placeholder="试试：零截断泊松、次序统计量、501" autocomplete="off"></label><label>知识模块<select id="filter-module"><option value="">全部模块</option>'+''.join(f'<option>{esc(m)}</option>' for m in modules)+'</select></label><label>难度<select id="filter-level"><option value="">全部难度</option><option>基础</option><option>中等</option><option>提高</option></select></label></form><div id="exact-topic-filter" class="result-count" hidden><span id="exact-topic-label"></span> <button type="button" id="clear-topic-filter" class="button">清除专题筛选</button></div>'+f'<p class="result-count" id="result-count" role="status">共 {len(questions)} 道题</p><noscript><p class="note">目录仅含题号与知识点，刷题需启用 JavaScript。</p></noscript><ol class="question-list">'+''.join(rows)+'</ol><p id="empty-result" class="empty-result" hidden>暂时没有匹配的题目。试试更短的关键词，或将模块和难度恢复为“全部”。</p>'
+page('questions.html','题目目录与搜索',f'搜索{len(questions)}道概率论与数理统计题目，按知识模块和难度筛选，查看分步解析与出处。',catalog,script=f'<script src="assets/search.js?v={hashlib.sha256((HERE/"assets"/"search.js").read_bytes()).hexdigest()[:12]}" defer></script>')
 
 # Old shared question URLs stay usable, but all question reading goes through
 # the same local daily/access rules in the practice UI. No answer preview here.
